@@ -1,0 +1,129 @@
+<!-- ===================== LOGIN ===================== -->
+<div id="loginView" class="min-h-screen flex items-center justify-center p-6">
+  <div class="glass rounded-3xl w-full max-w-md p-9 text-center">
+    <img src="1.jpg" class="w-20 h-20 rounded-full bg-white p-1.5 object-contain mx-auto mb-4 shadow-xl" onerror="this.style.display='none'" alt="" />
+    <div class="text-gold text-[.7rem] tracking-[0.3em] uppercase">Operations Console</div>
+    <h1 class="font-brand text-2xl mt-1">Everything Zanzibar</h1>
+    <p class="text-white/55 text-sm mt-1 mb-6 font-light">Role-based access for staff. Sign in to continue.</p>
+    <form id="loginForm" class="space-y-3 text-left">
+      <div><label class="lab">Email</label><input id="lg-user" class="fld" placeholder="you@everythingzanzibar.com" autocomplete="username" /></div>
+      <div><label class="lab">Password</label><input id="lg-pass" type="password" class="fld" placeholder="••••••••" autocomplete="current-password" /></div>
+      <div id="lg-err" class="text-danger text-sm text-center min-h-[1.1em]"></div>
+      <button class="w-full py-2.5 rounded-full bg-azure text-ocean font-medium hover:brightness-110 transition">Enter console</button>
+    </form>
+    <div class="text-white/35 text-xs mt-5">Authorized personnel only · access is monitored.</div>
+    <a href="everything-zanzibar.html" class="inline-block mt-4 text-xs text-azure hover:underline">← Back to main website</a>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="appView" class="hidden min-h-screen">
+  <!-- topbar -->
+  <header class="glass sticky top-0 z-30 flex items-center justify-between px-4 md:px-6 py-3 border-b border-white/10">
+    <a href="everything-zanzibar.html" class="flex items-center gap-2.5 hover:opacity-90 transition" title="Back to main website">
+      <img src="1.jpg" class="w-11 h-11 rounded-full bg-white p-1 object-contain" onerror="this.style.display='none'" alt="" />
+      <span class="font-brand text-base md:text-lg">Everything Zanzibar <b class="text-azure">Ops</b></span>
+    </a>
+    <div class="flex items-center gap-2 md:gap-4">
+      <a href="everything-zanzibar.html" class="text-xs px-3 py-1.5 rounded-full border border-azure/40 text-azure hover:bg-azure hover:text-ocean transition whitespace-nowrap">← Back to Main Website</a>
+      <div class="hidden sm:flex items-center gap-1 glass rounded-full p-1 text-xs">
+        <span class="px-2 text-white/45">Simulate:</span>
+        <button data-role="admin"   class="roleBtn px-3 py-1 rounded-full transition">Admin</button>
+        <button data-role="manager" class="roleBtn px-3 py-1 rounded-full transition">Manager</button>
+        <button data-role="media"   class="roleBtn px-3 py-1 rounded-full transition">Media</button>
+      </div>
+      <span id="roleBadge" class="text-xs px-3 py-1 rounded-full border border-white/15 text-azure"></span>
+      <button id="logoutBtn" class="text-xs px-3 py-1.5 rounded-full border border-white/15 hover:bg-white/10 transition">Log out</button>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[240px_1fr] min-h-[calc(100vh-66px)]">
+    <!-- sidebar -->
+    <nav id="sidebar" class="border-b lg:border-b-0 lg:border-r border-white/10 p-3 md:p-4 flex lg:flex-col gap-1 overflow-x-auto"></nav>
+    <!-- main -->
+    <main class="p-4 md:p-7 max-w-[1180px]">
+      <div id="denied" class="hidden glass rounded-2xl p-10 text-center text-white/60">
+        <div class="font-serif text-2xl text-white mb-2">Restricted</div>
+        Your role doesn’t have access to this panel.
+      </div>
+      <div id="panels"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="modal" id="mActivity"><div class="glass rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6">
+  <h3 id="ma-title" class="font-serif text-xl mb-1">Edit tour</h3><p class="text-white/55 text-sm mb-4">Saves to global state; the live site reflects it.</p>
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Tour name</label><input id="ma-name" class="fld"></div><div><label class="lab">Category</label><input id="ma-cat" class="fld" list="catList"></div></div>
+    <datalist id="catList"></datalist>
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Location</label><input id="ma-loc" class="fld"></div><div><label class="lab">Duration</label><input id="ma-dur" class="fld"></div></div>
+    <div><label class="lab">Visual prompt / image URL</label><textarea id="ma-vis" class="fld" rows="2"></textarea></div>
+    <div><label class="lab">Tiered price USD (blank = n/a)</label><div class="grid grid-cols-4 gap-2">
+      <input id="ma-p1" class="fld" type="number" placeholder="Single"><input id="ma-p2" class="fld" type="number" placeholder="Double"><input id="ma-p3" class="fld" type="number" placeholder="Triple"><input id="ma-p4" class="fld" type="number" placeholder="Group"></div></div>
+  </div>
+  <div class="flex gap-2 justify-end mt-5"><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="ma-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save</button></div>
+</div></div>
+
+<div class="modal" id="mEvent"><div class="glass rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6">
+  <h3 id="me-title" class="font-serif text-xl mb-1">Add event</h3><p class="text-white/55 text-sm mb-4">Global Zanzibar Event Registry entry.</p>
+  <div class="space-y-3">
+    <div><label class="lab">Event name</label><input id="me-name" class="fld"></div>
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Host location</label><input id="me-loc" class="fld" placeholder="Kendwa, Stone Town, Paje…"></div><div><label class="lab">Date &amp; time</label><input id="me-date" type="datetime-local" class="fld"></div></div>
+    <div><label class="lab">Ticket price tiers</label><input id="me-price" class="fld" placeholder="e.g. GA $45 · VIP $120"></div>
+    <div><label class="lab">Flyer image</label><div id="me-drop" class="border border-dashed border-white/20 rounded-xl h-28 flex items-center justify-center text-white/45 text-xs overflow-hidden cursor-pointer bg-black/20"><span>Drop or click to upload flyer</span></div><input id="me-flyer-url" class="fld mt-2 text-xs" placeholder="…or paste an image URL / Google Drive link"></div>
+    <div><label class="lab">Description memo</label><textarea id="me-desc" class="fld" rows="3"></textarea></div>
+  </div>
+  <div class="flex gap-2 justify-end mt-5"><button id="me-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="me-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save event</button></div>
+</div></div>
+
+<div class="modal" id="mHotel"><div class="glass rounded-2xl w-full max-w-lg p-6">
+  <h3 id="mh-title" class="font-serif text-xl mb-1">Add hotel</h3><p class="text-white/55 text-sm mb-4">The Zanzibar Staylist partner resort.</p>
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Resort name</label><input id="mh-name" class="fld"></div><div><label class="lab">Location</label><input id="mh-area" class="fld"></div></div>
+    <div><label class="lab">Image URL / filename</label><input id="mh-img" class="fld"></div>
+    <div class="grid grid-cols-3 gap-2"><div><label class="lab">Highlight 1</label><input id="mh-h1" class="fld"></div><div><label class="lab">Highlight 2</label><input id="mh-h2" class="fld"></div><div><label class="lab">Highlight 3</label><input id="mh-h3" class="fld"></div></div>
+  </div>
+  <div class="flex gap-2 justify-end mt-5"><button id="mh-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="mh-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save hotel</button></div>
+</div></div>
+
+<div class="modal" id="mYacht"><div class="glass rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6">
+  <h3 id="my-title" class="font-serif text-xl mb-1">Add yacht</h3><p class="text-white/55 text-sm mb-4">The Fleet Experience — shown live on the booking storefront.</p>
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Yacht title</label><input id="my-name" class="fld"></div><div><label class="lab">Capacity tag</label><input id="my-cap" class="fld" placeholder="Up to 12 guests"></div></div>
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Price label</label><input id="my-from" class="fld" placeholder="from $850 / day"></div><div><label class="lab">Image URL / filename</label><input id="my-img" class="fld"></div></div>
+    <div><label class="lab">Short description</label><input id="my-desc" class="fld" placeholder="One line shown under the title"></div>
+    <div class="grid grid-cols-2 gap-2"><div><label class="lab">Feature 1</label><input id="my-a1" class="fld"></div><div><label class="lab">Feature 2</label><input id="my-a2" class="fld"></div><div><label class="lab">Feature 3</label><input id="my-a3" class="fld"></div><div><label class="lab">Feature 4</label><input id="my-a4" class="fld"></div></div>
+  </div>
+  <div class="flex gap-2 justify-end mt-5"><button id="my-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="my-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save yacht</button></div>
+</div></div>
+
+<div class="modal" id="mPost"><div class="glass rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6">
+  <h3 id="mp-title" class="font-serif text-xl mb-1">New journal post</h3><p class="text-white/55 text-sm mb-4">Zanzibar Journal &amp; News update.</p>
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Title</label><input id="mp-title-i" class="fld"></div><div><label class="lab">Category</label><input id="mp-cat" class="fld" placeholder="Events / Guides…"></div></div>
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Date</label><input id="mp-date" type="date" class="fld"></div><div><label class="lab">Featured image</label><div class="flex gap-2"><input id="mp-img" class="fld flex-1" placeholder="URL · upload · Drive link"><button type="button" id="mp-up" class="px-3 rounded-lg bg-azure/15 text-azure text-xs font-medium whitespace-nowrap hover:bg-azure/25">Upload</button></div></div></div>
+    <div id="mp-prev" class="hidden h-24 rounded-lg bg-ocean2 bg-cover bg-center border border-white/10"></div>
+    <div><label class="lab">Excerpt</label><textarea id="mp-ex" class="fld" rows="2"></textarea></div>
+    <div><label class="lab">Body</label><textarea id="mp-body" class="fld" rows="4"></textarea></div>
+  </div>
+  <div class="flex gap-2 justify-end mt-5"><button id="mp-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="mp-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save post</button></div>
+</div></div>
+
+<!-- ENFORCED FIRST-LOGIN PASSWORD RESET -->
+<div class="modal" id="mReset"><div class="glass rounded-2xl w-full max-w-sm p-7 text-center">
+  <div class="text-gold text-[.7rem] tracking-[0.3em] uppercase">First-time sign-in</div>
+  <h3 class="font-serif text-xl mt-1 mb-1">Reset your password</h3>
+  <p class="text-white/55 text-sm mb-5 font-light">For security, choose a personal password before entering the console. Your temporary password will stop working.</p>
+  <div class="space-y-3 text-left">
+    <div><label class="lab">New password</label><input id="rs-p1" type="password" class="fld" placeholder="Min 8 chars · 1 capital · 1 number"></div>
+    <div><label class="lab">Confirm new password</label><input id="rs-p2" type="password" class="fld"></div>
+    <div id="rs-err" class="text-danger text-sm min-h-[1.1em]"></div>
+  </div>
+  <button id="rs-save" class="w-full mt-3 py-2.5 rounded-full bg-azure text-ocean font-medium hover:brightness-110 transition">Update and save</button>
+</div></div>
+
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] hidden"><div class="bg-azure text-ocean px-5 py-2.5 rounded-full text-sm font-medium shadow-xl" id="toastMsg"></div></div>
+
+
+

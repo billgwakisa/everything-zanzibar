@@ -1,0 +1,159 @@
+<!-- NAV -->
+<header id="nav" class="fixed top-0 inset-x-0 z-50 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 flex items-center justify-between py-3">
+    <a href="everything-zanzibar.html" style="font-family:'Open Sans',sans-serif" class="font-serif text-xl md:text-2xl tracking-wide flex items-center gap-2 text-white drop-shadow">
+      <img src="1.jpg" alt="Everything Zanzibar" class="w-14 h-14 rounded-full bg-white p-1.5 object-contain shadow-md shrink-0" onerror="this.style.display='none'" /> Everything <span class="font-medium">Zanzibar</span>
+    </a>
+    <nav class="hidden lg:flex items-center gap-7 text-sm text-white/90">
+      <a href="everything-zanzibar.html" class="hover:text-gold transition">Home</a>
+      <a href="everything-zanzibar.html#explore" class="hover:text-gold transition">Island</a>
+      <a class="text-gold">Activities</a>
+      <a href="everything-zanzibar-blog.html" class="hover:text-gold transition">Journal</a>
+      <a href="everything-zanzibar-founders.html" class="hover:text-gold transition">Founders</a>
+      <a href="everything-zanzibar-booking.html" class="px-4 py-2 rounded-full border border-gold text-gold hover:bg-gold hover:text-ocean transition font-medium">Plan Your Trip</a>
+    </nav>
+    <a href="everything-zanzibar-booking.html" class="lg:hidden px-4 py-2 rounded-full border border-gold text-gold text-sm">Plan</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="relative min-h-[62vh] flex items-end"
+  style="background:linear-gradient(180deg,rgba(10,37,64,.55),rgba(10,37,64,.35) 40%,rgba(10,37,64,.92)),url('https://commons.wikimedia.org/wiki/Special:FilePath/Zanzibar-Mnemba-Island-aerial-view_%282%29-Website-1920x1080-fill-gravity%3Dauto-Q_Auto%3DBest.jpg?width=2000') center/cover no-repeat;background-color:#0E7C7B;">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 w-full pt-28 pb-12 text-white">
+    <span class="text-gold text-xs md:text-sm tracking-[0.3em] uppercase font-medium">Things to do</span>
+    <h1 class="font-serif text-4xl md:text-6xl leading-tight mt-3 max-w-3xl">Every Zanzibar experience, <span class="text-gold italic font-light">in one place</span>.</h1>
+    <p class="text-white/85 text-lg font-light mt-4 max-w-xl">Wildlife, sandbanks, caves, watersports and more — filter what you love, then book it with our team in one tap.</p>
+  </div>
+</section>
+
+<!-- LIVE WEATHER -->
+<section class="bg-ocean2 border-b border-gold/15">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-3 flex flex-wrap items-center gap-x-6 gap-y-1">
+    <span class="text-gold text-xs tracking-[0.2em] uppercase font-medium">Zanzibar right now</span>
+    <div id="wx" class="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-white/75"><span>Loading live weather…</span></div>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<section class="bg-ocean sticky top-0 z-40 border-b border-gold/15 py-4">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 flex flex-col gap-3">
+    <div class="flex flex-wrap items-center gap-2" id="filterPills"></div>
+    <div class="flex items-center gap-3">
+      <input id="searchBox" class="field max-w-md" type="text" placeholder="Search activities or locations…" aria-label="Search activities" />
+      <span class="text-white/60 text-sm whitespace-nowrap" id="countLabel"></span>
+    </div>
+  </div>
+</section>
+
+<!-- GRID -->
+<section class="py-12 md:py-16 bg-sand min-h-[40vh]">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div id="grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <p id="empty" class="hidden text-center text-ocean/60 py-16">No activities match that search — try another keyword.</p>
+    <p class="text-center text-ocean/50 text-sm mt-10">Prices are per person in USD and may vary by season and group size. Final quote confirmed on WhatsApp.</p>
+  </div>
+</section>
+
+<!-- ISLAND ESSENTIALS — curated partner placements (sponsored) -->
+<section class="bg-ocean text-white py-14 md:py-20">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <span class="text-gold text-xs tracking-[0.3em] uppercase font-medium">Island Essentials</span>
+    <h2 class="font-serif text-2xl md:text-3xl mt-2">Curated Travelers Recommendations</h2>
+    <p class="text-white/55 text-sm font-light mt-2 mb-8 max-w-2xl">A hand-picked circle of partners we trust — cover for your trip, what you'll wear, and what you'll bring home. <span class="text-white/35">Sponsored placements.</span></p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <a href="https://wa.me/255764317595?text=I%27d%20like%20to%20enquire%20about%20an%20Island%20Essentials%20partner%20placement." target="_blank" rel="noopener" class="group block rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition">
+        <div class="aspect-[4/3] flex items-center justify-center bg-gradient-to-br from-ocean2 to-ocean relative"><span class="absolute top-3 left-3 text-[10px] uppercase tracking-[0.2em] text-gold/90">Travel Insurance</span><span class="text-white/30 text-sm font-light group-hover:text-white/45 transition">Your brand here</span></div>
+        <div class="p-4"><div class="font-serif text-base">Travel Insurance Partners</div><div class="text-white/45 text-xs mt-1">Cover for flights, kit &amp; medical — landing to take-off.</div></div>
+      </a>
+      <a href="https://wa.me/255764317595?text=I%27d%20like%20to%20enquire%20about%20an%20Island%20Essentials%20partner%20placement." target="_blank" rel="noopener" class="group block rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition">
+        <div class="aspect-[4/3] flex items-center justify-center bg-gradient-to-br from-teal/30 to-ocean relative"><span class="absolute top-3 left-3 text-[10px] uppercase tracking-[0.2em] text-gold/90">Local Fashion</span><span class="text-white/30 text-sm font-light group-hover:text-white/45 transition">Your brand here</span></div>
+        <div class="p-4"><div class="font-serif text-base">Boutique Island Clothing</div><div class="text-white/45 text-xs mt-1">Linen, kanga &amp; resort wear made on Unguja.</div></div>
+      </a>
+      <a href="https://wa.me/255764317595?text=I%27d%20like%20to%20enquire%20about%20an%20Island%20Essentials%20partner%20placement." target="_blank" rel="noopener" class="group block rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition">
+        <div class="aspect-[4/3] flex items-center justify-center bg-gradient-to-br from-gold/25 to-ocean relative"><span class="absolute top-3 left-3 text-[10px] uppercase tracking-[0.2em] text-gold/90">Jewelry</span><span class="text-white/30 text-sm font-light group-hover:text-white/45 transition">Your brand here</span></div>
+        <div class="p-4"><div class="font-serif text-base">Island Jewelry Houses</div><div class="text-white/45 text-xs mt-1">Tanzanite, pearls &amp; Swahili silver, ethically sourced.</div></div>
+      </a>
+      <a href="https://wa.me/255764317595?text=I%27d%20like%20to%20enquire%20about%20an%20Island%20Essentials%20partner%20placement." target="_blank" rel="noopener" class="group block rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition">
+        <div class="aspect-[4/3] flex items-center justify-center bg-gradient-to-br from-sunset/25 to-ocean relative"><span class="absolute top-3 left-3 text-[10px] uppercase tracking-[0.2em] text-gold/90">Rentals</span><span class="text-white/30 text-sm font-light group-hover:text-white/45 transition">Your brand here</span></div>
+        <div class="p-4"><div class="font-serif text-base">Independent Rental Collectives</div><div class="text-white/45 text-xs mt-1">Villas, bikes &amp; gear from trusted local hosts.</div></div>
+      </a>
+    </div>
+    <p class="text-center text-white/30 text-xs mt-8">Want your brand seen by every traveller booking Zanzibar? <a href="https://wa.me/255764317595?text=I%27d%20like%20to%20enquire%20about%20an%20Island%20Essentials%20partner%20placement." target="_blank" rel="noopener" class="text-gold hover:underline">Partner with Everything Zanzibar →</a></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-ocean2 text-white/70 border-t border-gold/15">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-10 grid md:grid-cols-3 gap-8">
+    <div>
+      <div class="font-serif text-xl text-white flex items-center gap-2"><img src="1.jpg" alt="Everything Zanzibar" class="w-12 h-12 rounded-full bg-white p-1.5 object-contain" onerror="this.style.display='none'" /> Everything Zanzibar</div>
+      <p class="text-sm mt-3 font-light max-w-xs">Tourism · Events · Experiences. Plan your whole trip through us — and with us.</p>
+    </div>
+    <div class="text-sm">
+      <div class="text-white font-medium mb-3">Plan with us</div>
+      <ul class="space-y-2">
+        <li><a href="everything-zanzibar-booking.html" class="hover:text-gold transition">Yacht &amp; jet ski booking</a></li>
+        <li><a href="everything-zanzibar-booking.html" class="hover:text-gold transition">Partner hotels &amp; transfers</a></li>
+        <li><a href="everything-zanzibar-blog.html" class="hover:text-gold transition">Journal &amp; news</a></li>
+      </ul>
+    </div>
+    <div class="text-sm">
+      <div class="text-white font-medium mb-3">Reach us</div>
+      <ul class="space-y-2">
+        <li><a href="https://wa.me/255764317595" target="_blank" rel="noopener" class="hover:text-gold transition">WhatsApp: +255 764 317 595</a></li>
+        <li><a href="https://instagram.com/everythingzanzibar" target="_blank" rel="noopener" class="hover:text-gold transition">Instagram: @EverythingZanzibar</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-white/10"><div class="max-w-7xl mx-auto px-5 md:px-8 py-5 text-xs">© <span id="year"></span> Everything Zanzibar · Made with salt air in Zanzibar</div></div>
+</footer>
+
+<!-- ACTIVITY BOOKING MODAL — Pax calculator + persistence-intercept checkout -->
+<div id="bkModal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4" style="background:rgba(4,12,24,.72);backdrop-filter:blur(6px);" onclick="if(event.target===this)closeBooking()">
+  <div class="bg-white text-ocean rounded-2xl w-full max-w-md p-6 shadow-2xl">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="text-[11px] uppercase tracking-wide text-teal font-medium" id="bk-cat"></div>
+        <h3 class="font-serif text-xl mt-0.5 leading-tight" id="bk-name"></h3>
+        <div class="text-xs text-ocean/60 mt-1" id="bk-meta"></div>
+      </div>
+      <button onclick="closeBooking()" class="text-ocean/40 hover:text-ocean text-2xl leading-none" aria-label="Close">&times;</button>
+    </div>
+    <div class="mt-5 space-y-4">
+      <div>
+        <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Lead traveller name</label>
+        <input id="bk-traveler" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" placeholder="Full name" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Experience date</label>
+          <input id="bk-date" type="date" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" />
+        </div>
+        <div>
+          <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Phone (country code)</label>
+          <input id="bk-phone" type="tel" inputmode="tel" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" placeholder="+255 7XX XXX XXX" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Participants (Pax)</label>
+        <div class="flex items-center gap-3">
+          <button onclick="paxStep(-1)" class="w-10 h-10 rounded-full border border-ocean/15 text-2xl leading-none hover:bg-ocean/5 transition">−</button>
+          <span id="bk-pax" class="font-serif text-2xl w-9 text-center">1</span>
+          <button onclick="paxStep(1)" class="w-10 h-10 rounded-full border border-ocean/15 text-2xl leading-none hover:bg-ocean/5 transition">+</button>
+          <span class="text-xs text-ocean/55 ml-1" id="bk-rate"></span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-3 border-t border-ocean/10">
+        <span class="text-sm text-ocean/60">Total due</span>
+        <span class="font-serif text-2xl text-ocean" id="bk-total">—</span>
+      </div>
+    </div>
+    <button onclick="confirmBooking()" class="mt-5 w-full py-3 rounded-full bg-teal hover:bg-tealb text-white font-medium transition">Book Experience →</button>
+    <p class="text-center text-ocean/45 text-xs mt-2">Saved to our reservation system first, then confirmed with our concierge on WhatsApp.</p>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] hidden"><div class="bg-teal text-white px-5 py-3 rounded-full shadow-xl text-sm font-medium">✓ Reserved — opening WhatsApp…</div></div>
+
+
+

@@ -1,0 +1,13 @@
+
+  html{scroll-behavior:smooth;}
+  body{font-family:'Inter',system-ui,sans-serif;}
+  .font-serif{font-family:'Fraunces',Georgia,serif;}
+  ::selection{background:#2FA8E0;color:#0A2540;}
+  .pill{cursor:pointer;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.85);transition:all .25s;}
+  .pill:hover{border-color:#2FA8E0;color:#fff;}
+  .pill.active{background:#2FA8E0;color:#0A2540;border-color:#2FA8E0;font-weight:500;}
+  .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+  .field{width:100%;padding:.7rem 1rem;border-radius:50px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;outline:none;}
+  .field::placeholder{color:rgba(255,255,255,.5);}
+  .field:focus{border-color:#2FA8E0;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}

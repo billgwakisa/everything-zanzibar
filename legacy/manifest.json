@@ -1,0 +1,148 @@
+[
+  {
+    "file": "everything-zanzibar.html",
+    "route": "/",
+    "slug": "home",
+    "lang": "en",
+    "title": "Everything Zanzibar — The island, uncovered.",
+    "desc": "Insider guides by day. Unforgettable events by night. Everything Zanzibar is the ultimate curator of the island — hidden beaches, Stone Town flavours, beach festivals and exclusive luxury yacht parties.",
+    "bodyAttrs": "",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "/legacy/home.s0.js"
+      }
+    ]
+  },
+  {
+    "file": "everything-zanzibar-booking.html",
+    "route": "/booking",
+    "slug": "booking",
+    "lang": "en",
+    "title": "Everything Zanzibar — Plan Your Whole Trip With Us",
+    "desc": "Book your dream Zanzibar getaway end to end — luxury yacht & jet ski charters, partner beach resorts, and seamless airport & ferry transfers. Plan your whole trip through us, and with us.",
+    "bodyAttrs": "class=\"bg-sand text-ocean antialiased overflow-x-hidden\"",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "https://cdn.tailwindcss.com"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/booking.s0.js"
+      },
+      {
+        "type": "src",
+        "src": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+      },
+      {
+        "type": "src",
+        "src": "/backend/ez-api.js"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/booking.s1.js"
+      }
+    ]
+  },
+  {
+    "file": "everything-zanzibar-activities.html",
+    "route": "/activities",
+    "slug": "activities",
+    "lang": "en",
+    "title": "Everything Zanzibar — Things To Do: Experiences &amp; Activities",
+    "desc": "Every Zanzibar experience in one place — wildlife, marine safaris, caves, horse riding, watersports, scuba, skydiving and more. Filter, compare and book on WhatsApp.",
+    "bodyAttrs": "class=\"bg-sand text-ocean\"",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "https://cdn.tailwindcss.com"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/activities.s0.js"
+      },
+      {
+        "type": "src",
+        "src": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+      },
+      {
+        "type": "src",
+        "src": "/backend/ez-api.js"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/activities.s1.js"
+      }
+    ]
+  },
+  {
+    "file": "everything-zanzibar-blog.html",
+    "route": "/blog",
+    "slug": "blog",
+    "lang": "en",
+    "title": "Everything Zanzibar — The Journal: Latest News &amp; Updates",
+    "desc": "The Journal — latest news, event announcements, island guides and updates from Everything Zanzibar. Festivals, yacht sailings, hidden beaches and more.",
+    "bodyAttrs": "",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+      },
+      {
+        "type": "src",
+        "src": "/backend/ez-api.js"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/blog.s0.js"
+      }
+    ]
+  },
+  {
+    "file": "everything-zanzibar-founders.html",
+    "route": "/founders",
+    "slug": "founders",
+    "lang": "en",
+    "title": "Everything Zanzibar — The Founders",
+    "desc": "Meet the people behind Everything Zanzibar — the local team turning the island into one seamless, premium experience, from insider guides to luxury yacht events.",
+    "bodyAttrs": "",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "/legacy/founders.s0.js"
+      }
+    ]
+  },
+  {
+    "file": "everything-zanzibar-admin.html",
+    "route": "/admin",
+    "slug": "admin",
+    "lang": "en",
+    "title": "Everything Zanzibar — Operations Console",
+    "desc": "",
+    "bodyAttrs": "class=\"text-[#eaf2fb] font-sans\"",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "https://cdn.tailwindcss.com"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/admin.s0.js"
+      },
+      {
+        "type": "src",
+        "src": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+      },
+      {
+        "type": "src",
+        "src": "/backend/ez-api.js"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/admin.s1.js"
+      }
+    ]
+  }
+]
