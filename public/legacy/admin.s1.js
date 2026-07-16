@@ -95,10 +95,10 @@
     $('#mReset').classList.remove('open'); grantAccess(pendingUser); toast('Password updated — welcome aboard.');
   });
   $('#logoutBtn').addEventListener('click',function(){ sessionStorage.removeItem('ez_auth'); if(BACKEND){ try{ EZ.auth.signOut(); }catch(e){} } showApp(false); });
-  $$('.roleBtn').forEach(function(b){ b.addEventListener('click',function(){ role=b.getAttribute('data-role'); set('ez_role',role); $('#roleBadge').textContent='simulating · '+role; renderRole(); }); });
+  /* Role simulator removed — the role now comes ONLY from the signed-in Supabase
+     account (profiles.role), so each staff member uses their own credentials. */
 
   function renderRole(){
-    $$('.roleBtn').forEach(function(b){ var on=b.getAttribute('data-role')===role; b.className='roleBtn px-3 py-1 rounded-full transition '+(on?'bg-azure text-ocean font-medium':'text-white/70 hover:text-white'); });
     var sb=$('#sidebar'); sb.innerHTML='';
     allowed().forEach(function(s){
       var a=document.createElement('a'); a.className='whitespace-nowrap px-3.5 py-2.5 rounded-xl text-sm font-medium cursor-pointer transition flex items-center gap-2 '+(s.id===section?'bg-azure/15 text-white border border-azure/35':'text-white/65 hover:bg-white/5 hover:text-white');
