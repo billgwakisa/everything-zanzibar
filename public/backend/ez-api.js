@@ -11,8 +11,8 @@
   "use strict";
 
   // ---- CONFIG: paste these from Supabase → Project Settings → API ----
-  var SUPABASE_URL = "https://gmunqhrgsdfqingfexgl.supabase.co";
-  var SUPABASE_ANON_KEY = "sb_publishable_01KSnXYhfia8cIrf2vdByA_wDCaeMMu";
+  var SUPABASE_URL = "https://cniqmwphzjhxrqyvcpjk.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaXFtd3BoempoeHJxeXZjcGprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNTc0MTEsImV4cCI6MjA5OTczMzQxMX0.VnBTbqaPBBQuEqyXmpe9zaT328xuIkGVRBxIdGgEaWQ";
 
   // Only activate once real keys are pasted in (and supabase-js is loaded).
   var configured = SUPABASE_URL.indexOf("YOUR-PROJECT") === -1 && SUPABASE_ANON_KEY.indexOf("YOUR-") === -1;
