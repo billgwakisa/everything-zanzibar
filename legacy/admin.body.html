@@ -52,7 +52,11 @@
     <div class="grid grid-cols-2 gap-3"><div><label class="lab">Tour name</label><input id="ma-name" class="fld"></div><div><label class="lab">Category</label><input id="ma-cat" class="fld" list="catList"></div></div>
     <datalist id="catList"></datalist>
     <div class="grid grid-cols-2 gap-3"><div><label class="lab">Location</label><input id="ma-loc" class="fld"></div><div><label class="lab">Duration</label><input id="ma-dur" class="fld"></div></div>
-    <div><label class="lab">Visual prompt / image URL</label><textarea id="ma-vis" class="fld" rows="2"></textarea></div>
+    <div><label class="lab">Card description</label><textarea id="ma-vis" class="fld" rows="2" placeholder="Short description shown on the activity card"></textarea></div>
+    <div><label class="lab">Experience image</label>
+      <div class="flex gap-2"><input id="ma-img" class="fld flex-1" placeholder="Upload a photo, or paste a URL"><button type="button" id="ma-up" class="px-3 rounded-lg bg-azure/15 text-azure text-xs font-medium whitespace-nowrap hover:bg-azure/25">Upload</button></div>
+      <div id="ma-prev" class="hidden h-24 mt-2 rounded-lg bg-ocean2 bg-cover bg-center border border-white/10"></div>
+    </div>
     <div><label class="lab">Tiered price USD (blank = n/a)</label><div class="grid grid-cols-4 gap-2">
       <input id="ma-p1" class="fld" type="number" placeholder="Single"><input id="ma-p2" class="fld" type="number" placeholder="Double"><input id="ma-p3" class="fld" type="number" placeholder="Triple"><input id="ma-p4" class="fld" type="number" placeholder="Group"></div></div>
   </div>
@@ -82,6 +86,34 @@
     <div class="grid grid-cols-3 gap-2"><div><label class="lab">Highlight 1</label><input id="mh-h1" class="fld"></div><div><label class="lab">Highlight 2</label><input id="mh-h2" class="fld"></div><div><label class="lab">Highlight 3</label><input id="mh-h3" class="fld"></div></div>
   </div>
   <div class="flex gap-2 justify-end mt-5"><button id="mh-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="mh-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save hotel</button></div>
+</div></div>
+
+<div class="modal" id="mVehicle"><div class="glass rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6">
+  <h3 id="mv-title" class="font-serif text-xl mb-1">Add vehicle</h3><p class="text-white/55 text-sm mb-4">Self-Driven Freedom — shown live on the logistics page.</p>
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="lab">Vehicle name</label><input id="mv-name" class="fld" placeholder="Zanzibar Scooter"></div>
+      <div><label class="lab">Category</label>
+        <select id="mv-cat" class="fld">
+          <option value="scooter">Scooter</option><option value="quad">Quad bike</option>
+          <option value="bicycle">Bicycle</option><option value="suv">SUV</option>
+          <option value="jeep">4x4 Jeep</option><option value="tuktuk">Tuk-tuk</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="lab">Daily rate (USD)</label><input id="mv-rate" type="number" min="0" class="fld" placeholder="25"></div>
+      <div><label class="lab">Vehicle image</label><div class="flex gap-2"><input id="mv-img" class="fld flex-1" placeholder="Upload, or paste a URL"><button type="button" id="mv-up" class="px-3 rounded-lg bg-azure/15 text-azure text-xs font-medium whitespace-nowrap hover:bg-azure/25">Upload</button></div></div>
+    </div>
+    <div id="mv-prev" class="hidden h-24 rounded-lg bg-ocean2 bg-cover bg-center border border-white/10"></div>
+    <div class="grid grid-cols-3 gap-2">
+      <div><label class="lab">Engine / type</label><input id="mv-engine" class="fld" placeholder="125cc automatic"></div>
+      <div><label class="lab">Seats / capacity</label><input id="mv-seats" class="fld" placeholder="2 riders"></div>
+      <div><label class="lab">Fuel</label><input id="mv-fuel" class="fld" placeholder="Petrol"></div>
+    </div>
+    <div><label class="lab">Short description</label><input id="mv-desc" class="fld" placeholder="One line shown on the card"></div>
+  </div>
+  <div class="flex gap-2 justify-end mt-5"><button id="mv-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="mv-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save vehicle</button></div>
 </div></div>
 
 <div class="modal" id="mYacht"><div class="glass rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-6">

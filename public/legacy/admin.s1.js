@@ -29,6 +29,7 @@
       if(sec==='journal') set('ez_blog',(await EZ.posts.list()).map(function(p){return {id:p.id,title:p.title,cat:p.category,date:p.published,img:p.image_url,excerpt:p.excerpt,body:p.body};}));
       if(sec==='activities') window._bkActs=(await EZ.activities.list()).map(function(a){return {name:a.name,cat:a.category,location:a.location,duration:a.duration,visualPrompt:a.visual_prompt,image:a.image_url,prices:{single:a.price_single,double:a.price_double,triple:a.price_triple,group:a.price_group}};});
       if(sec==='yachts') set('ez_yachts',(await EZ.yachts.list()).map(function(y){return {id:y.id,name:y.name,cap:y.capacity,from:y.price_label,image:y.image_url,desc:y.description,amenities:y.amenities};}));
+      if(sec==='vehicles') set('ez_vehicles',(await EZ.vehicles.list()).map(function(v){return {id:v.id,name:v.name,category:v.category,rate:v.daily_rate,engine:v.engine,seats:v.seats,fuel:v.fuel,desc:v.description,image:v.image_url,sort:v.sort};}));
     }catch(e){ console.error(e); toast('Could not load from backend — see console.'); }
     finally{ window._ezHydrating=false; }
   }
@@ -73,8 +74,9 @@
     {id:'activities',label:'Activities & Tours',        roles:['admin','manager']},
     {id:'hotels',    label:'Partner Hotels',            roles:['admin','manager']},
     {id:'yachts',    label:'The Fleet Experience',      roles:['admin','manager']},
+    {id:'vehicles',  label:'Self-Driven Freedom',       roles:['admin','manager']},
     {id:'transit',   label:'Ground Transit',            roles:['admin','manager']},
-    {id:'media',     label:'Media & Logos',             roles:['admin','media']},
+    {id:'media',     label:'Media & Logos',             roles:['admin','manager','media']},
     {id:'journal',   label:'Journal & News',            roles:['admin','media']},
     {id:'users',     label:'Users & Settings',          roles:['admin']}
   ];
@@ -177,7 +179,7 @@
     var p=$('#panels'), d=$('#denied');
     if(!section || !can(section)){ d.classList.remove('hidden'); p.innerHTML=''; return; }
     d.classList.add('hidden');
-    ({overview:pOverview,bookings:pBookings,events:pEvents,activities:pActs,hotels:pHotels,yachts:pYachts,transit:pTransit,media:pMedia,journal:pJournal,users:pUsers}[section]||function(){})();
+    ({overview:pOverview,bookings:pBookings,events:pEvents,activities:pActs,hotels:pHotels,yachts:pYachts,vehicles:pVehicles,transit:pTransit,media:pMedia,journal:pJournal,users:pUsers}[section]||function(){})();
   }
   function head(title,sub,actions){ return '<div class="flex items-end justify-between flex-wrap gap-3 mb-5"><div><h2 class="font-serif text-2xl">'+title+'</h2><p class="text-white/55 text-sm mt-0.5 font-light">'+sub+'</p></div><div class="flex gap-2 flex-wrap">'+(actions||'')+'</div></div>'; }
 
@@ -358,16 +360,16 @@
   function openAct(name){
     var a=actMerged().filter(function(x){return x.name===name;})[0]||{name:'',cat:'',location:'',duration:'',visualPrompt:'',prices:{}};
     maOrig=name; $('#ma-title').textContent=name?'Edit tour':'Add tour';
-    $('#ma-name').value=a.name||''; $('#ma-cat').value=a.cat||''; $('#ma-loc').value=a.location||''; $('#ma-dur').value=a.duration||''; $('#ma-vis').value=a.image||a.visualPrompt||'';
+    $('#ma-name').value=a.name||''; $('#ma-cat').value=a.cat||''; $('#ma-loc').value=a.location||''; $('#ma-dur').value=a.duration||''; $('#ma-vis').value=a.visualPrompt||''; $('#ma-img').value=a.image||''; showPrev('ma-prev', a.image||'');
     var p=a.prices||{}; $('#ma-p1').value=p.single==null?'':p.single; $('#ma-p2').value=p.double==null?'':p.double; $('#ma-p3').value=p.triple==null?'':p.triple; $('#ma-p4').value=p.group==null?'':p.group;
     $('#mActivity').classList.add('open');
   }
   function numOrNull(v){ v=(v||'').trim(); return v===''?null:Number(v); }
   $('#ma-save').addEventListener('click',function(){
     var name=$('#ma-name').value.trim(); if(!name){ toast('Tour name required.'); return; }
-    var vis=$('#ma-vis').value.trim(), rec={ cat:$('#ma-cat').value.trim()||'Other', location:$('#ma-loc').value.trim(), duration:$('#ma-dur').value.trim(),
+    var rec={ cat:$('#ma-cat').value.trim()||'Other', location:$('#ma-loc').value.trim(), duration:$('#ma-dur').value.trim(),
+      visualPrompt:$('#ma-vis').value.trim(), image:$('#ma-img').value.trim(),
       prices:{single:numOrNull($('#ma-p1').value),double:numOrNull($('#ma-p2').value),triple:numOrNull($('#ma-p3').value),group:numOrNull($('#ma-p4').value)} };
-    if(/^(https?:|data:|\.|\/|[\w-]+\.(jpg|jpeg|png|webp))/i.test(vis)) rec.image=vis; else rec.visualPrompt=vis;
     var ov=actOv(); if(maOrig&&maOrig!==name) ov[maOrig]={_deleted:true}; ov[name]=Object.assign({},ov[name],rec); delete ov[name]._deleted;
     if(BACKEND) EZ.activities.upsert({name:name,category:rec.cat,location:rec.location,duration:rec.duration,visualPrompt:rec.visualPrompt,image:rec.image,prices:rec.prices}).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));});
     set('ez_activities',ov); $('#mActivity').classList.remove('open'); paint(); toast('Saved — live site updated.');
@@ -402,6 +404,38 @@
   function openYacht(i){ yIdx=i; var y=i>=0?yachts()[i]:{name:'',cap:'',from:'',image:'',desc:'',amenities:['','','','']}; var a=y.amenities||[]; $('#my-title').textContent=i>=0?'Edit yacht':'Add yacht'; $('#my-name').value=y.name||''; $('#my-cap').value=y.cap||''; $('#my-from').value=y.from||''; $('#my-img').value=y.image||''; $('#my-desc').value=y.desc||''; $('#my-a1').value=a[0]||''; $('#my-a2').value=a[1]||''; $('#my-a3').value=a[2]||''; $('#my-a4').value=a[3]||''; $('#my-del').style.display=i>=0?'inline-flex':'none'; $('#mYacht').classList.add('open'); }
   $('#my-save').addEventListener('click',function(){ var rec={name:$('#my-name').value.trim(),cap:$('#my-cap').value.trim(),from:$('#my-from').value.trim(),image:$('#my-img').value.trim(),desc:$('#my-desc').value.trim(),amenities:[$('#my-a1').value.trim(),$('#my-a2').value.trim(),$('#my-a3').value.trim(),$('#my-a4').value.trim()].filter(Boolean)}; if(!rec.name){toast('Title required.');return;} var ys=yachts(); if(yIdx>=0){ rec.id=ys[yIdx]&&ys[yIdx].id; ys[yIdx]=rec; } else { rec.id='y'+Date.now(); ys.push(rec); } set('ez_yachts',ys); if(BACKEND) EZ.yachts.upsert(rec).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); $('#mYacht').classList.remove('open'); paint(); toast('Yacht saved — live on the storefront.'); });
   $('#my-del').addEventListener('click',function(){ if(yIdx>=0&&confirm('Delete yacht?')){ var ys=yachts(); if(BACKEND&&ys[yIdx]&&ys[yIdx].id) EZ.yachts.remove(ys[yIdx].id).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); ys.splice(yIdx,1); set('ez_yachts',ys); $('#mYacht').classList.remove('open'); paint(); toast('Deleted.'); } });
+
+  /* ---------- SELF-DRIVEN FREEDOM — rental vehicles (admin + manager) ---------- */
+  var VEHICLE_DEF=[
+    {id:'v1', name:'Zanzibar Scooter', category:'scooter', rate:25, engine:'125cc automatic', seats:'2 riders', fuel:'Petrol - very light', desc:'The classic island way to weave the coast roads. Helmets included.', image:'', sort:1}
+  ];
+  function vehicles(){ return get('ez_vehicles',null)||VEHICLE_DEF.slice(); }
+  var vIdx=-1;
+  function pVehicles(){
+    $('#panels').innerHTML=head('Self-Driven Freedom','Scooters, quads, bicycles &amp; cruisers &mdash; shown live in the Self-Driven Freedom section of the logistics page.','<button id="veAdd" class="px-3 py-1.5 rounded-full bg-azure text-ocean text-sm font-medium">+ Add vehicle</button>')+'<div id="veGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>';
+    function render(){ var vs=vehicles(); $('#veGrid').innerHTML=vs.map(function(v,i){ return '<article class="glass rounded-2xl overflow-hidden flex flex-col"><div class="h-28 bg-ocean2 bg-cover bg-center" style="background-image:url(\''+esc(v.image||'')+'\')"></div><div class="p-4"><h3 class="font-serif text-lg">'+esc(v.name)+'</h3><div class="text-white/55 text-xs">'+esc(v.category||'')+(v.rate!=null?' &middot; $'+esc(v.rate)+' / day':'')+'</div><div class="flex flex-wrap gap-1.5 mt-2">'+[v.engine,v.seats,v.fuel].filter(Boolean).map(function(t){return '<span class="text-[.66rem] px-2 py-0.5 rounded-full bg-azure/12 text-azure">'+esc(t)+'</span>';}).join('')+'</div><button data-ved="'+i+'" class="mt-3 w-full py-2 rounded-full border border-white/15 text-sm hover:bg-white/10">Edit</button></div></article>'; }).join('')||'<p class="text-white/45 py-6 text-center col-span-full">No vehicles yet — add your first ride.</p>'; $$('[data-ved]').forEach(function(b){b.addEventListener('click',function(){openVehicle(+b.getAttribute('data-ved'));});}); }
+    $('#veAdd').onclick=function(){ openVehicle(-1); }; render();
+  }
+  function openVehicle(i){ vIdx=i; var v=i>=0?vehicles()[i]:{name:'',category:'scooter',rate:'',engine:'',seats:'',fuel:'',desc:'',image:''};
+    $('#mv-title').textContent=i>=0?'Edit vehicle':'Add vehicle';
+    $('#mv-name').value=v.name||''; $('#mv-cat').value=v.category||'scooter'; $('#mv-rate').value=v.rate==null?'':v.rate;
+    $('#mv-engine').value=v.engine||''; $('#mv-seats').value=v.seats||''; $('#mv-fuel').value=v.fuel||'';
+    $('#mv-desc').value=v.desc||''; $('#mv-img').value=v.image||''; showPrev('mv-prev', v.image||'');
+    $('#mv-del').style.display=i>=0?'inline-flex':'none'; $('#mVehicle').classList.add('open');
+  }
+  $('#mv-save').addEventListener('click',function(){
+    var rec={ name:$('#mv-name').value.trim(), category:$('#mv-cat').value, rate:numOrNull($('#mv-rate').value),
+      engine:$('#mv-engine').value.trim(), seats:$('#mv-seats').value.trim(), fuel:$('#mv-fuel').value.trim(),
+      desc:$('#mv-desc').value.trim(), image:$('#mv-img').value.trim() };
+    if(!rec.name){ toast('Vehicle name required.'); return; }
+    var vs=vehicles();
+    if(vIdx>=0){ rec.id=vs[vIdx]&&vs[vIdx].id; rec.sort=vs[vIdx]&&vs[vIdx].sort; vs[vIdx]=rec; }
+    else { rec.id='v'+Date.now(); rec.sort=vs.length+1; vs.push(rec); }
+    set('ez_vehicles',vs);
+    if(BACKEND) EZ.vehicles.upsert(rec).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));});
+    $('#mVehicle').classList.remove('open'); paint(); toast('Vehicle saved — live on the site.');
+  });
+  $('#mv-del').addEventListener('click',function(){ if(vIdx>=0&&confirm('Delete vehicle?')){ var vs=vehicles(); if(BACKEND&&vs[vIdx]&&vs[vIdx].id) EZ.vehicles.remove(vs[vIdx].id).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); vs.splice(vIdx,1); set('ez_vehicles',vs); $('#mVehicle').classList.remove('open'); paint(); toast('Deleted.'); } });
 
   /* ---------- TRANSIT ---------- */
   var T_DEF={intro:'Met at arrivals, driven everywhere, dropped at departure. Total peace of mind from landing to take-off.',throughout:'Optional transport throughout your stay — beaches, Stone Town, dinners, on call.',departure:'Guaranteed final departure drop-off, timed to your flight or ferry.'};
@@ -472,6 +506,8 @@
   wireImg('mp-up','mp-img','mp-prev','journal', function(){ return ($('#mp-title-i')||{}).value || 'post';  }); // Journal
   wireImg('mh-up','mh-img','mh-prev','hotels',  function(){ return ($('#mh-name')||{}).value   || 'hotel'; }); // Partner hotels & villas
   wireImg('my-up','my-img','my-prev','yachts',  function(){ return ($('#my-name')||{}).value   || 'yacht'; }); // Fleet / cabins / decks
+  wireImg('ma-up','ma-img','ma-prev','activities', function(){ return ($('#ma-name')||{}).value || 'experience'; }); // Experiences
+  wireImg('mv-up','mv-img','mv-prev','rentals', function(){ return ($('#mv-name')||{}).value   || 'vehicle'; }); // Self-Driven Freedom
 
   /* ---------- USERS & SETTINGS (admin) ---------- */
   function pUsers(){

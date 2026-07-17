@@ -83,6 +83,20 @@
       async remove(id) { return ok(await sb.from("yachts").delete().eq("id", id)); }
     },
 
+    /* ---------------- VEHICLES — "Self-Driven Freedom" rental rides ---------------- */
+    vehicles: {
+      async list() { return ok(await sb.from("vehicles").select("*").eq("is_active", true).order("sort")); },
+      // v = {id, name, category, rate, engine, seats, fuel, desc, image, sort}
+      async upsert(v) {
+        return ok(await sb.from("vehicles").upsert({
+          id: v.id, name: v.name, category: v.category, daily_rate: v.rate,
+          engine: v.engine, seats: v.seats, fuel: v.fuel,
+          description: v.desc, image_url: v.image, sort: v.sort || 0, is_active: true
+        }));
+      },
+      async remove(id) { return ok(await sb.from("vehicles").update({ is_active: false }).eq("id", id)); }
+    },
+
     /* ---------------- TRANSIT (singleton) ---------------- */
     transit: {
       async get() { var r = ok(await sb.from("transit").select("*").eq("id", 1).maybeSingle()); return r || {}; },
