@@ -23,7 +23,7 @@
     window._ezHydrating=true;
     try{
       if(sec==='bookings'||sec==='overview') set('ez_bookings',(await EZ.bookings.list()).map(function(r){return {id:r.id,name:r.name,contact:r.contact,date:r.travel_date,assets:r.assets,total:r.total,type:r.type,status:r.status,createdAt:+new Date(r.created_at)};}));
-      if(sec==='events'||sec==='overview') set('ez_events',(await EZ.events.list()).map(function(e){return {id:e.id,name:e.name,loc:e.location,date:e.starts_at,price:e.price_tiers,flyer:e.flyer_url,desc:e.description};}));
+      if(sec==='events'||sec==='overview') set('ez_events',(await EZ.events.list()).map(function(e){return {id:e.id,name:e.name,loc:e.location,date:e.starts_at,price:e.price_tiers,flyer:e.flyer_url,desc:e.description,organizer:e.organizer,region:e.region,venue:e.venue,timezone:e.timezone,tiers:e.ticket_tiers||[],sponsored:!!e.sponsored};}));
       if(sec==='hotels') set('ez_hotels',(await EZ.hotels.list()).map(function(h){return {id:h.id,name:h.name,area:h.area,image:h.image_url,highlights:h.highlights};}));
       if(sec==='transit'){ var t=await EZ.transit.get(); set('ez_transit',{intro:t.intro,throughout:t.throughout,departure:t.departure}); }
       if(sec==='journal') set('ez_blog',(await EZ.posts.list()).map(function(p){return {id:p.id,title:p.title,cat:p.category,date:p.published,img:p.image_url,excerpt:p.excerpt,body:p.body};}));
@@ -256,9 +256,13 @@
     $('#evSearch').oninput=render; $('#evAdd').onclick=function(){ openEvent(null); }; render();
   }
   function openEvent(id){
-    var e=id?get('ez_events',[]).filter(function(x){return x.id===id;})[0]:{id:null,name:'',loc:'',date:'',price:'',flyer:'',desc:''};
+    var e=id?get('ez_events',[]).filter(function(x){return x.id===id;})[0]:{id:null,name:'',loc:'',date:'',flyer:'',desc:'',organizer:'',region:'zanzibar',venue:'',timezone:'Africa/Dar_es_Salaam',tiers:[],sponsored:false};
     evEdit=Object.assign({},e); $('#me-title').textContent=id?'Edit event':'Add event';
-    $('#me-name').value=e.name||''; $('#me-loc').value=e.loc||''; $('#me-date').value=(e.date||'').slice(0,16); $('#me-price').value=e.price||''; $('#me-desc').value=e.desc||'';
+    $('#me-name').value=e.name||''; $('#me-loc').value=e.loc||''; $('#me-date').value=(e.date||'').slice(0,16); $('#me-desc').value=e.desc||'';
+    $('#me-org').value=e.organizer||''; $('#me-region').value=e.region||'zanzibar'; $('#me-venue').value=e.venue||'';
+    $('#me-tz').value=e.timezone||'Africa/Dar_es_Salaam'; $('#me-sponsored').checked=!!e.sponsored;
+    var t=e.tiers||[];
+    [1,2,3].forEach(function(n){ var row=t[n-1]||{}; $('#me-t'+n+'n').value=row.name||''; $('#me-t'+n+'p').value=(row.price==null?'':row.price); });
     $('#me-drop').innerHTML=e.flyer?'<img src="'+e.flyer+'" class="w-full h-full object-cover">':'<span>Drop or click to upload flyer</span>';
     $('#me-flyer-url').value=(e.flyer && e.flyer.indexOf('data:')!==0)?e.flyer:'';
     $('#me-del').style.display=id?'inline-flex':'none';
@@ -275,8 +279,16 @@
     var fu=$('#me-flyer-url'); if(fu) fu.addEventListener('change',function(){ var u=normalizeDriveUrl(fu.value.trim()); if(u){ fu.value=u; setFlyer(u); } });
   })();
   $('#me-save').addEventListener('click',function(){
-    evEdit.name=$('#me-name').value.trim(); evEdit.loc=$('#me-loc').value.trim(); evEdit.date=$('#me-date').value; evEdit.price=$('#me-price').value.trim(); evEdit.desc=$('#me-desc').value.trim();
-    if(!evEdit.name){ toast('Event name required.'); return; }
+    evEdit.name=$('#me-name').value.trim(); evEdit.loc=$('#me-loc').value.trim(); evEdit.date=$('#me-date').value; evEdit.desc=$('#me-desc').value.trim();
+    evEdit.organizer=$('#me-org').value.trim(); evEdit.region=$('#me-region').value; evEdit.venue=$('#me-venue').value.trim();
+    evEdit.timezone=$('#me-tz').value; evEdit.sponsored=$('#me-sponsored').checked;
+    // structured ticket tiers -> [{name, price}], blanks skipped
+    evEdit.tiers=[1,2,3].map(function(n){ return { name:$('#me-t'+n+'n').value.trim(), price:numOrNull($('#me-t'+n+'p').value) }; })
+                        .filter(function(r){ return r.name && r.price!=null; });
+    // human-readable summary kept for the old price_tiers column / registry cards
+    evEdit.price=evEdit.tiers.map(function(r){ return r.name+' $'+r.price; }).join(' · ');
+    if(!evEdit.name){ toast('Event title required.'); return; }
+    if(!evEdit.tiers.length){ toast('Add at least one ticket tier (name + price).'); return; }
     var all=get('ez_events',[]);
     if(evEdit.id){ all=all.map(function(x){return x.id===evEdit.id?evEdit:x;}); } else { evEdit.id='ev'+Date.now(); all.push(evEdit); }
     if(BACKEND) EZ.events.upsert(Object.assign({},evEdit,{id:(evEdit.id&&/-/.test(evEdit.id))?evEdit.id:undefined})).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));});

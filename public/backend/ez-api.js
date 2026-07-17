@@ -106,7 +106,16 @@
     /* ---------------- EVENTS ---------------- */
     events: {
       async list() { return ok(await sb.from("events").select("*").order("starts_at")); },
-      async upsert(e) { return ok(await sb.from("events").upsert({ id: e.id || undefined, name: e.name, location: e.loc, starts_at: e.date, price_tiers: e.price, flyer_url: e.flyer, description: e.desc })); },
+      // e = {id, name, loc, date, price, flyer, desc, organizer, region, venue, timezone, tiers[], sponsored}
+      async upsert(e) {
+        return ok(await sb.from("events").upsert({
+          id: e.id || undefined, name: e.name, location: e.loc, starts_at: e.date || null,
+          price_tiers: e.price, flyer_url: e.flyer, description: e.desc,
+          organizer: e.organizer, region: e.region || "zanzibar", venue: e.venue,
+          timezone: e.timezone || "Africa/Dar_es_Salaam",
+          ticket_tiers: e.tiers || [], sponsored: !!e.sponsored, is_active: true
+        }));
+      },
       async remove(id) { return ok(await sb.from("events").delete().eq("id", id)); }
     },
 
