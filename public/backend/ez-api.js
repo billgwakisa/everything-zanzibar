@@ -140,15 +140,99 @@
       async save(v) { return ok(await sb.from("settings").upsert({ key: "site", value: v })); }
     },
 
-    /* ---------------- MEDIA STORAGE ---------------- */
+    /* ================= MEDIA STORAGE & DELIVERY PIPELINE =====================
+       pick file -> convert to .webp in the browser -> upload into a mapped
+       folder of the 'everything-zanzibar-media' bucket -> write the public URL
+       straight back onto the DB row -> return a cache-busted URL so the new
+       image appears instantly on refresh (no browser cache lag).
+
+       AVIF NOTE: browsers DECODE avif but cannot ENCODE it (canvas.toBlob does
+       not support image/avif). We standardise on WebP (universal + ~30% smaller
+       than jpeg). Serve avif later via a CDN transform, not the client.
+       ===================================================================== */
     media: {
-      // uploads a File/Blob to the 'media' bucket and returns a public URL
-      async upload(file, slot) {
-        var ext = (file.name || "img.jpg").split(".").pop();
-        var path = slot + "-" + Date.now() + "." + ext;
-        ok(await sb.storage.from("media").upload(path, file, { upsert: true }));
-        return sb.storage.from("media").getPublicUrl(path).data.publicUrl;
-      }
+      BUCKET: "everything-zanzibar-media",
+
+      // Folder map — keeps storage predictable and tidy.
+      FOLDERS: {
+        banners:    "banners",     // homepage / founders / booking hero banners
+        activities: "activities",  // snorkelling, caves, parasailing...
+        yachts:     "yachts",      // fleet, cabin layouts, deck views
+        hotels:     "hotels",      // partner hotels & villas
+        rentals:    "rentals",     // cars, scooters, jet skis
+        journal:    "journal",     // editorial images
+        events:     "events",      // promotional flyers
+        brand:      "brand",       // logos / misc
+        library:    "library"      // free-form media library
+      },
+
+      slug(s) {
+        return String(s || "img").toLowerCase().normalize("NFKD")
+          .replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "").slice(0, 60) || "img";
+      },
+
+      // /path.webp -> /path.webp?v=1699999999   (cache-buster)
+      bust(url) { return !url ? url : String(url).split("?")[0] + "?v=" + Date.now(); },
+
+      /* Convert an image File -> WebP Blob, downscaled to maxW (default 1600). */
+      async toWebp(file, maxW, quality) {
+        maxW = maxW || 1600; quality = quality || 0.82;
+        if (!file || !/^image\//.test(file.type)) throw new Error("That file is not an image.");
+        // vectors/animations: keep original, converting would break them
+        if (file.type === "image/svg+xml" || file.type === "image/gif") return null;
+        var bmp = await createImageBitmap(file);
+        var scale = Math.min(1, maxW / bmp.width);
+        var w = Math.max(1, Math.round(bmp.width * scale));
+        var h = Math.max(1, Math.round(bmp.height * scale));
+        var c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(bmp, 0, 0, w, h);
+        var blob = await new Promise(function (r) { c.toBlob(r, "image/webp", quality); });
+        if (!blob) throw new Error("WebP conversion is not supported in this browser.");
+        return blob;
+      },
+
+      /* Upload a file into <folder>/<name>-<ts>.webp  ->  { path, url } */
+      async put(file, folder, name, opts) {
+        opts = opts || {};
+        var dir  = EZ.media.FOLDERS[folder] || EZ.media.slug(folder);
+        var webp = opts.raw ? null : await EZ.media.toWebp(file, opts.maxW, opts.quality);
+        var body = webp || file;                                   // fall back to original
+        var ext  = webp ? "webp" : ((file.name || "img.jpg").split(".").pop() || "jpg");
+        var type = webp ? "image/webp" : (file.type || "application/octet-stream");
+        var path = dir + "/" + EZ.media.slug(name || folder) + "-" + Date.now() + "." + ext;
+        ok(await sb.storage.from(EZ.media.BUCKET).upload(path, body, {
+          upsert: true, contentType: type, cacheControl: "31536000"
+        }));
+        var url = sb.storage.from(EZ.media.BUCKET).getPublicUrl(path).data.publicUrl;
+        return { path: path, url: EZ.media.bust(url) };
+      },
+
+      /* Upload AND write the URL onto a DB row in one call.
+         EZ.media.attach(file, { folder:'yachts', name:'Luxury Catamaran',
+                                 table:'yachts', column:'image_url', match:{ id:'y1' } })
+         -> returns the cache-busted public URL.                              */
+      async attach(file, cfg) {
+        cfg = cfg || {};
+        var res = await EZ.media.put(file, cfg.folder, cfg.name, cfg);
+        if (cfg.table && cfg.column && cfg.match) {
+          var patch = {}; patch[cfg.column] = res.url;
+          var q = sb.from(cfg.table).update(patch);
+          Object.keys(cfg.match).forEach(function (k) { q = q.eq(k, cfg.match[k]); });
+          ok(await q);                                   // RLS enforces staff-only writes
+        }
+        return res.url;
+      },
+
+      async remove(path) { return ok(await sb.storage.from(EZ.media.BUCKET).remove([].concat(path))); },
+      async list(folder) {
+        return ok(await sb.storage.from(EZ.media.BUCKET)
+          .list(EZ.media.FOLDERS[folder] || folder, { limit: 100, sortBy: { column: "created_at", order: "desc" } }));
+      },
+
+      /* back-compat: existing callers do EZ.media.upload(file, 'slot') */
+      async upload(file, slot) { return (await EZ.media.put(file, "brand", slot || "asset")).url; }
     }
   };
 

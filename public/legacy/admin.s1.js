@@ -39,11 +39,23 @@
   function isVideo(url){ return /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url||'') || /drive\.google\.com.*(export=download|\/preview)/.test(url||''); }
   function showPrev(prevId,url){ var p=$('#'+prevId); if(!p) return; if(url){ p.style.backgroundImage='url('+JSON.stringify(url)+')'; p.classList.remove('hidden'); } else { p.style.backgroundImage=''; p.classList.add('hidden'); } }
   // Wire an image-URL input + an Upload button (file→storage/base64) + Drive-link normalisation + live preview.
-  function wireImg(btnId,inputId,prevId,slot){
+  /* Wire an image field: [Upload] -> webp-convert -> storage folder -> URL into
+     the field (cache-busted) -> live preview. `folder` maps to EZ.media.FOLDERS.
+     `nameFn` (optional) supplies a human filename, e.g. the yacht/hotel name.  */
+  function wireImg(btnId,inputId,prevId,folder,nameFn){
     var inp=$('#'+inputId), btn=$('#'+btnId); if(!inp) return;
     function sync(){ inp.value=normalizeDriveUrl(inp.value); showPrev(prevId, inp.value); }
     inp.addEventListener('change',sync); inp.addEventListener('blur',sync);
-    if(btn) btn.addEventListener('click',function(){ var i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.onchange=function(){ var f=i.files[0]; if(!f) return; if(BACKEND){ EZ.media.upload(f,slot).then(function(u){ inp.value=u; showPrev(prevId,u); toast('Uploaded to storage.'); }).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); } else fileURL(f,function(u){ inp.value=u; showPrev(prevId,u); toast('Image attached.'); }); }; i.click(); });
+    if(btn) btn.addEventListener('click',function(){
+      var i=document.createElement('input'); i.type='file'; i.accept='image/*';
+      i.onchange=function(){ var f=i.files[0]; if(!f) return;
+        if(BACKEND){
+          toast('Optimising & uploading…');
+          EZ.media.put(f, folder, (nameFn && nameFn()) || folder)
+            .then(function(r){ inp.value=r.url; showPrev(prevId,r.url); toast('Uploaded ✓'); })
+            .catch(function(e){ console.error(e); toast('Upload failed — '+(e.message||e)); });
+        } else fileURL(f,function(u){ inp.value=u; showPrev(prevId,u); toast('Image attached.'); });
+      }; i.click(); });
   }
   $$('[data-x]').forEach(function(b){ b.addEventListener('click',function(){ b.closest('.modal').classList.remove('open'); }); });
   $$('.modal').forEach(function(m){ m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('open'); }); });
@@ -253,7 +265,7 @@
   (function wireEventDrop(){
     var d=$('#me-drop');
     function setFlyer(u){ evEdit.flyer=u; d.innerHTML='<img src="'+u+'" class="w-full h-full object-cover">'; }
-    function take(f){ if(!f||f.type.indexOf('image')!==0) return; if(BACKEND){ EZ.media.upload(f,'event-flyer').then(function(u){ setFlyer(u); toast('Uploaded to storage.'); }).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); } else fileURL(f,setFlyer); }
+    function take(f){ if(!f||f.type.indexOf('image')!==0) return; if(BACKEND){ toast('Optimising & uploading…'); EZ.media.put(f,'events',(($('#me-name')||{}).value||'flyer')).then(function(r){ setFlyer(r.url); toast('Flyer uploaded ✓'); }).catch(function(e){console.error(e); toast('Upload failed — '+(e.message||e));}); } else fileURL(f,setFlyer); }
     d.addEventListener('click',function(){ var i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.onchange=function(){take(i.files[0]);}; i.click(); });
     ['dragover','dragenter'].forEach(function(ev){ d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('border-azure');}); });
     ['dragleave','drop'].forEach(function(ev){ d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('border-azure');}); });
@@ -411,11 +423,21 @@
       '<div class="glass rounded-2xl p-4 text-sm text-white/70 mb-4">Fixed brand slots — uploads preview instantly. To publish locally, <b>Download</b> and drop into the site folder under the listed filename; with Supabase connected they upload to storage.</div>'+
       '<div id="mdGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>';
     function render(){ media=get('ez_media',{}); $('#mdGrid').innerHTML=SLOTS.map(function(s){ var cur=media[s.id]||s.file; return '<div class="glass rounded-2xl p-3"><div class="font-medium text-sm">'+s.name+'</div><div class="text-white/40 text-xs mb-2">'+s.file+'</div><div class="drop border border-dashed border-white/20 rounded-xl aspect-[16/10] overflow-hidden bg-black/20 cursor-pointer" data-slot="'+s.id+'"><img src="'+esc(cur)+'" onerror="this.style.display=\'none\'" class="w-full h-full object-cover"></div><div class="flex gap-2 mt-2"><button data-browse="'+s.id+'" class="px-3 py-1 rounded-full border border-white/15 text-xs">Browse</button>'+(media[s.id]?'<button data-dl="'+s.id+'" data-f="'+s.file+'" class="px-3 py-1 rounded-full bg-gold text-ocean text-xs">Download</button>':'')+'</div></div>'; }).join('');
-      SLOTS.forEach(function(s){ var d=$('[data-slot="'+s.id+'"]'); if(!d)return; function take(f){ if(f&&f.type.indexOf('image')===0) fileURL(f,function(u){ media[s.id]=u; set('ez_media',media); render(); toast('Image updated.'); }); } d.onclick=function(){ pick(s.id); }; ['dragover','dragenter'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('border-azure');});}); ['dragleave','drop'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('border-azure');});}); d.addEventListener('drop',function(e){take(e.dataTransfer.files[0]);}); });
+      SLOTS.forEach(function(s){ var d=$('[data-slot="'+s.id+'"]'); if(!d)return; function take(f){ if(f&&f.type.indexOf('image')===0) putSlot(s.id,f); } d.onclick=function(){ pick(s.id); }; ['dragover','dragenter'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('border-azure');});}); ['dragleave','drop'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('border-azure');});}); d.addEventListener('drop',function(e){take(e.dataTransfer.files[0]);}); });
       $$('[data-browse]').forEach(function(b){ b.onclick=function(){ pick(b.getAttribute('data-browse')); }; });
       $$('[data-dl]').forEach(function(b){ b.onclick=function(){ var a=document.createElement('a'); a.href=media[b.getAttribute('data-dl')]; a.download=b.getAttribute('data-f'); a.click(); }; });
     }
-    function pick(id){ var i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.onchange=function(){ var f=i.files[0]; if(!f)return; if(BACKEND){ EZ.media.upload(f,id).then(function(url){ media[id]=url; set('ez_media',media); render(); toast('Uploaded to storage.'); }).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); } else fileURL(f,function(u){ media[id]=u; set('ez_media',media); render(); toast('Image updated.'); }); }; i.click(); }
+    /* Banner/brand slots -> webp -> everything-zanzibar-media/banners/ -> cache-busted URL */
+    function putSlot(id, f){
+      if(!f) return;
+      if(BACKEND){
+        toast('Optimising & uploading…');
+        EZ.media.put(f,'banners',id)
+          .then(function(r){ media[id]=r.url; set('ez_media',media); render(); toast('Uploaded ✓'); })
+          .catch(function(e){ console.error(e); toast('Upload failed — '+(e.message||e)); });
+      } else fileURL(f,function(u){ media[id]=u; set('ez_media',media); render(); toast('Image updated.'); });
+    }
+    function pick(id){ var i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.onchange=function(){ putSlot(id, i.files[0]); }; i.click(); }
     /* ---- unified Media Library: pictures + videos + Google Drive links (copyable URLs) ---- */
     function lib(){ return get('ez_medialib',[]); }
     function renderLib(){
@@ -430,7 +452,7 @@
       $$('[data-mldel]').forEach(function(b){ b.onclick=function(){ set('ez_medialib', lib().filter(function(x){return x.id!==b.getAttribute('data-mldel');})); renderLib(); }; });
     }
     function addLib(url,kind,name){ var items=lib(); items.unshift({id:'m'+Date.now(), url:url, kind:kind||(isVideo(url)?'video':'image'), name:name||''}); set('ez_medialib', items); renderLib(); }
-    $('#mlUp').onclick=function(){ var i=document.createElement('input'); i.type='file'; i.accept='image/*,video/*'; i.onchange=function(){ var f=i.files[0]; if(!f) return; var kind=f.type.indexOf('video')===0?'video':'image'; if(!BACKEND && f.size>3*1024*1024){ toast('File over 3MB — link it via Google Drive instead.'); return; } if(BACKEND){ EZ.media.upload(f,'lib').then(function(u){ addLib(u,kind,f.name); toast('Uploaded to storage.'); }).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); } else fileURL(f,function(u){ addLib(u,kind,f.name); toast('Added to library.'); }); }; i.click(); };
+    $('#mlUp').onclick=function(){ var i=document.createElement('input'); i.type='file'; i.accept='image/*,video/*'; i.onchange=function(){ var f=i.files[0]; if(!f) return; var kind=f.type.indexOf('video')===0?'video':'image'; if(!BACKEND && f.size>3*1024*1024){ toast('File over 3MB — link it via Google Drive instead.'); return; } if(BACKEND){ toast('Uploading…'); EZ.media.put(f,'library',(f.name||'asset').replace(/\.[^.]+$/,''),{ raw: kind==='video' }).then(function(r){ addLib(r.url,kind,f.name); toast('Uploaded ✓'); }).catch(function(e){console.error(e); toast('Upload failed — '+(e.message||e));}); } else fileURL(f,function(u){ addLib(u,kind,f.name); toast('Added to library.'); }); }; i.click(); };
     $('#mlAddUrl').onclick=function(){ var u=normalizeDriveUrl(($('#mlUrl').value||'').trim()); if(!u){ toast('Paste a URL first.'); return; } addLib(u, isVideo(u)?'video':'image', 'Linked asset'); $('#mlUrl').value=''; toast('Linked.'); };
     renderLib();
     render();
@@ -446,7 +468,10 @@
   function openPost(id){ var p=id?get('ez_blog',[]).filter(function(x){return x.id===id;})[0]:{id:null,title:'',cat:'',date:'',img:'',excerpt:'',body:''}; pEdit=Object.assign({},p); $('#mp-title').textContent=id?'Edit post':'New journal post'; $('#mp-title-i').value=p.title||''; $('#mp-cat').value=p.cat||''; $('#mp-date').value=p.date||''; $('#mp-img').value=p.img||''; $('#mp-ex').value=p.excerpt||''; $('#mp-body').value=p.body||''; $('#mp-del').style.display=id?'inline-flex':'none'; showPrev('mp-prev', p.img||''); $('#mPost').classList.add('open'); }
   $('#mp-save').addEventListener('click',function(){ pEdit.title=$('#mp-title-i').value.trim(); pEdit.cat=$('#mp-cat').value.trim(); pEdit.date=$('#mp-date').value; pEdit.img=$('#mp-img').value.trim(); pEdit.excerpt=$('#mp-ex').value.trim(); pEdit.body=$('#mp-body').value.trim(); if(!pEdit.title){toast('Title required.');return;} var all=get('ez_blog',[]); if(pEdit.id)all=all.map(function(x){return x.id===pEdit.id?pEdit:x;}); else {pEdit.id='b'+Date.now(); all.unshift(pEdit);} if(BACKEND) EZ.posts.upsert(Object.assign({},pEdit,{id:(pEdit.id&&/-/.test(pEdit.id))?pEdit.id:undefined})).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); set('ez_blog',all); $('#mPost').classList.remove('open'); paint(); toast('Post saved.'); });
   $('#mp-del').addEventListener('click',function(){ if(pEdit.id&&confirm('Delete post?')){ if(BACKEND) EZ.posts.remove(pEdit.id).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); set('ez_blog',get('ez_blog',[]).filter(function(x){return x.id!==pEdit.id;})); $('#mPost').classList.remove('open'); paint(); toast('Deleted.'); } });
-  wireImg('mp-up','mp-img','mp-prev','journal');   // Journal post image: upload / Drive link / preview
+  /* Image fields -> everything-zanzibar-media/<folder>/  (webp + cache-busted URL) */
+  wireImg('mp-up','mp-img','mp-prev','journal', function(){ return ($('#mp-title-i')||{}).value || 'post';  }); // Journal
+  wireImg('mh-up','mh-img','mh-prev','hotels',  function(){ return ($('#mh-name')||{}).value   || 'hotel'; }); // Partner hotels & villas
+  wireImg('my-up','my-img','my-prev','yachts',  function(){ return ($('#my-name')||{}).value   || 'yacht'; }); // Fleet / cabins / decks
 
   /* ---------- USERS & SETTINGS (admin) ---------- */
   function pUsers(){

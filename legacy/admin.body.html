@@ -75,7 +75,10 @@
   <h3 id="mh-title" class="font-serif text-xl mb-1">Add hotel</h3><p class="text-white/55 text-sm mb-4">The Zanzibar Staylist partner resort.</p>
   <div class="space-y-3">
     <div class="grid grid-cols-2 gap-3"><div><label class="lab">Resort name</label><input id="mh-name" class="fld"></div><div><label class="lab">Location</label><input id="mh-area" class="fld"></div></div>
-    <div><label class="lab">Image URL / filename</label><input id="mh-img" class="fld"></div>
+    <div><label class="lab">Property image</label>
+      <div class="flex gap-2"><input id="mh-img" class="fld flex-1" placeholder="Upload a photo, or paste a URL"><button type="button" id="mh-up" class="px-3 rounded-lg bg-azure/15 text-azure text-xs font-medium whitespace-nowrap hover:bg-azure/25">Upload</button></div>
+      <div id="mh-prev" class="hidden h-24 mt-2 rounded-lg bg-ocean2 bg-cover bg-center border border-white/10"></div>
+    </div>
     <div class="grid grid-cols-3 gap-2"><div><label class="lab">Highlight 1</label><input id="mh-h1" class="fld"></div><div><label class="lab">Highlight 2</label><input id="mh-h2" class="fld"></div><div><label class="lab">Highlight 3</label><input id="mh-h3" class="fld"></div></div>
   </div>
   <div class="flex gap-2 justify-end mt-5"><button id="mh-del" class="px-4 py-2 rounded-full border border-danger/50 text-danger text-sm mr-auto">Delete</button><button class="px-4 py-2 rounded-full border border-white/15 text-sm" data-x>Cancel</button><button id="mh-save" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save hotel</button></div>
@@ -85,7 +88,8 @@
   <h3 id="my-title" class="font-serif text-xl mb-1">Add yacht</h3><p class="text-white/55 text-sm mb-4">The Fleet Experience — shown live on the booking storefront.</p>
   <div class="space-y-3">
     <div class="grid grid-cols-2 gap-3"><div><label class="lab">Yacht title</label><input id="my-name" class="fld"></div><div><label class="lab">Capacity tag</label><input id="my-cap" class="fld" placeholder="Up to 12 guests"></div></div>
-    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Price label</label><input id="my-from" class="fld" placeholder="from $850 / day"></div><div><label class="lab">Image URL / filename</label><input id="my-img" class="fld"></div></div>
+    <div class="grid grid-cols-2 gap-3"><div><label class="lab">Price label</label><input id="my-from" class="fld" placeholder="from $850 / day"></div><div><label class="lab">Yacht image</label><div class="flex gap-2"><input id="my-img" class="fld flex-1" placeholder="Upload, or paste a URL"><button type="button" id="my-up" class="px-3 rounded-lg bg-azure/15 text-azure text-xs font-medium whitespace-nowrap hover:bg-azure/25">Upload</button></div></div></div>
+    <div id="my-prev" class="hidden h-24 rounded-lg bg-ocean2 bg-cover bg-center border border-white/10"></div>
     <div><label class="lab">Short description</label><input id="my-desc" class="fld" placeholder="One line shown under the title"></div>
     <div class="grid grid-cols-2 gap-2"><div><label class="lab">Feature 1</label><input id="my-a1" class="fld"></div><div><label class="lab">Feature 2</label><input id="my-a2" class="fld"></div><div><label class="lab">Feature 3</label><input id="my-a3" class="fld"></div><div><label class="lab">Feature 4</label><input id="my-a4" class="fld"></div></div>
   </div>
