@@ -99,39 +99,113 @@
   // LIVE two-way binding: re-render instantly when a Manager/Admin edits the Staylist in the dashboard (another tab).
   window.addEventListener('storage', function(e){ if(e.key==='ez_hotels') renderHotels(); });
 
-  /* ---------- Island Cruise Car & Scooter Rentals (maps into the itinerary ledger) ---------- */
-  var RENTALS = [
-    { id:'jeep',    name:'Compact Safari 4x4 Jeep', img:'Old_Fort_of_Zanzibar.jpg', rate:55, blurb:'Go-anywhere on dirt tracks to hidden beaches. Seats 4, full A/C.', tags:['4x4','A/C','Seats 4'] },
-    { id:'suv',     name:'Luxury SUV',              img:'Beach_at_Matemwe.jpg', rate:90, blurb:'Premium comfort for families and longer island cruises. Seats 6.', tags:['Automatic','Premium','Seats 6'] },
-    { id:'scooter', name:'Premium Island Scooter',  img:'PAJE%2C_Zanzibar.jpg', rate:20, blurb:'The breezy local way to weave the coast roads. 2 helmets included.', tags:['Easy park','2 helmets','Coast cruiser'] }
+  /* ========================= SELF-DRIVEN FREEDOM =========================
+     Rides render LIVE from the Supabase `vehicles` table (managed in the
+     dashboard). Falls back to a built-in set if the DB is unreachable, so the
+     section is never empty. "Book Ride" -> modal -> saves to the Booking Vault
+     FIRST -> then hands off to the WhatsApp concierge.
+     ===================================================================== */
+  var RIDE_FALLBACK = [
+    { id:'v1', name:'Zanzibar Scooter', category:'scooter', rate:25, engine:'125cc automatic', seats:'2 riders', fuel:'Petrol', desc:'The classic island way to weave the coast roads. Helmets included.', image:'' },
+    { id:'v4', name:'Cruiser SUV',      category:'suv',     rate:90, engine:'2.5L automatic',  seats:'6 seats', fuel:'Diesel - A/C', desc:'Premium comfort for families and longer island cruises.', image:'' },
+    { id:'v5', name:'Compact Safari 4x4 Jeep', category:'jeep', rate:55, engine:'4x4 manual',  seats:'4 seats', fuel:'Petrol - A/C', desc:'Go-anywhere on dirt tracks to the hidden beaches.', image:'' }
   ];
+  var RIDES = RIDE_FALLBACK.slice();
   var rentalGrid = document.getElementById('rentalGrid');
-  if(rentalGrid){
-    rentalGrid.innerHTML = RENTALS.map(function(v){
+
+  function rideImg(v){
+    var u = v.image || '';
+    if (!u) return FP + 'PAJE%2C_Zanzibar.jpg?width=800';        // graceful placeholder
+    return /^(https?:|data:|\/)/.test(u) ? u : FP + u + '?width=800';
+  }
+  function renderRides(){
+    if(!rentalGrid) return;
+    rentalGrid.innerHTML = RIDES.map(function(v){
+      var chips = [v.engine, v.seats, v.fuel].filter(Boolean);
       return '<article class="bg-white rounded-3xl overflow-hidden shadow-lg shadow-ocean/10 border border-ocean/5 flex flex-col">'
-        + '<div class="h-40" style="background:linear-gradient(180deg,rgba(10,37,64,0),rgba(10,37,64,.4)),url(\''+FP+v.img+'?width=800\') center/cover;background-color:#1E70B0;"></div>'
+        + '<div class="h-40" style="background:linear-gradient(180deg,rgba(10,37,64,0),rgba(10,37,64,.4)),url(\''+rideImg(v)+'\') center/cover;background-color:#1E70B0;"></div>'
         + '<div class="p-5 flex flex-col flex-1">'
-        + '<h4 class="font-serif text-lg">'+v.name+'</h4>'
-        + '<div class="flex flex-wrap gap-1.5 mt-2">'+v.tags.map(function(t){return '<span class="text-[11px] bg-teal/10 text-teal px-2.5 py-1 rounded-full">'+t+'</span>';}).join('')+'</div>'
-        + '<p class="text-sm text-ocean/65 font-light mt-3 flex-1">'+v.blurb+'</p>'
-        + '<div class="flex items-center justify-between mt-4 pt-3 border-t border-ocean/10"><span class="font-serif text-xl text-ocean">$'+v.rate+'<span class="text-xs text-ocean/50 font-sans"> / day</span></span></div>'
-        + '<button onclick="reserveRental(\''+v.id+'\')" class="mt-4 w-full py-2.5 rounded-full bg-teal hover:bg-tealb text-white text-sm font-medium transition">Reserve this cruiser →</button>'
+        + '<div class="flex items-center justify-between gap-2"><h4 class="font-serif text-lg">'+esc(v.name)+'</h4>'
+        + (v.category?'<span class="text-[10px] uppercase tracking-wide text-teal/80">'+esc(v.category)+'</span>':'')+'</div>'
+        + '<div class="flex flex-wrap gap-1.5 mt-2">'+chips.map(function(t){return '<span class="text-[11px] bg-teal/10 text-teal px-2.5 py-1 rounded-full">'+esc(t)+'</span>';}).join('')+'</div>'
+        + (v.desc?'<p class="text-sm text-ocean/65 font-light mt-3 flex-1">'+esc(v.desc)+'</p>':'<div class="flex-1"></div>')
+        + '<div class="flex items-center justify-between mt-4 pt-3 border-t border-ocean/10"><span class="font-serif text-xl text-ocean">$'+esc(v.rate)+'<span class="text-xs text-ocean/50 font-sans"> / day</span></span></div>'
+        + '<button type="button" data-ride="'+esc(v.id)+'" class="mt-4 w-full py-2.5 rounded-full bg-teal hover:bg-tealb text-white text-sm font-medium transition">Book Ride &rarr;</button>'
         + '</div></article>';
     }).join('');
   }
-  window.reserveRental = function(id){
-    var v = RENTALS.filter(function(x){return x.id===id;})[0]; if(!v) return;
-    // persistence intercept: save to ledger first, then concierge confirmation
-    if(!logBooking({ name:'(rental reservation)', contact:'', date:'', assets:'Rental: '+v.name+' ($'+v.rate+'/day)', total:v.rate, type:'Rental' })){ alert('We could not save your reservation — please try again.'); return; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  renderRides();
+
+  // Pull the live fleet from Supabase (managed in the dashboard)
+  if(window.EZ && window.EZ_READY && EZ.vehicles){
+    EZ.vehicles.list().then(function(rows){
+      if(rows && rows.length){
+        RIDES = rows.map(function(v){ return { id:v.id, name:v.name, category:v.category, rate:v.daily_rate,
+          engine:v.engine, seats:v.seats, fuel:v.fuel, desc:v.description, image:v.image_url }; });
+        renderRides();
+      }
+    }).catch(function(e){ console.error('vehicles load failed', e); });
+  }
+
+  /* ---- Book Ride modal ---- */
+  var rideSel = null;
+  function openRide(id){
+    rideSel = RIDES.filter(function(x){ return String(x.id)===String(id); })[0];
+    if(!rideSel) return;
+    document.getElementById('rd-name').textContent  = rideSel.name;
+    document.getElementById('rd-rate').textContent  = '$'+rideSel.rate+' / day';
+    ['rd-fullname','rd-phone','rd-date'].forEach(function(i){ var e=document.getElementById(i); e.value=''; e.style.borderColor=''; });
+    document.getElementById('rd-days').value = 1;
+    rideTotal();
+    var m=document.getElementById('mRide'); m.classList.remove('hidden'); m.classList.add('flex');
+  }
+  function closeRide(){ var m=document.getElementById('mRide'); m.classList.add('hidden'); m.classList.remove('flex'); }
+  function rideTotal(){
+    var d = Math.max(1, parseInt(document.getElementById('rd-days').value,10)||1);
+    var t = (Number(rideSel && rideSel.rate)||0) * d;
+    document.getElementById('rd-total').textContent = '$'+t;
+    return t;
+  }
+  window.openRide = openRide; window.closeRide = closeRide; window.rideTotal = rideTotal;
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-ride]'); if(b){ e.preventDefault(); openRide(b.getAttribute('data-ride')); }
+  });
+
+  var rdConfirm = document.getElementById('rd-confirm');
+  if(rdConfirm) rdConfirm.addEventListener('click', function(){
+    if(!rideSel) return;
+    var nm = (document.getElementById('rd-fullname').value||'').trim();
+    var ph = (document.getElementById('rd-phone').value||'').trim();
+    var dt = document.getElementById('rd-date').value;
+    var days = Math.max(1, parseInt(document.getElementById('rd-days').value,10)||1);
+    function bad(id){ var el=document.getElementById(id); el.style.borderColor='#f25a5a'; el.focus(); }
+    if(!nm){ bad('rd-fullname'); return; }
+    if(ph.replace(/[^0-9]/g,'').length < 8){ bad('rd-phone'); alert('Please add a valid phone number with country code (e.g. +255…).'); return; }
+    if(!dt){ bad('rd-date'); return; }
+    var total = rideTotal();
+    // STEP 1 — Vault first
+    if(!logBooking({ name:nm, contact:ph, date:dt,
+        assets:'Self-drive rental: '+rideSel.name+' × '+days+' day'+(days>1?'s':''),
+        total: total, type:'Rental' })){
+      alert('We could not save your booking — please try again.'); return;
+    }
+    // STEP 2 — only then, concierge handoff
+    closeRide();
     send([
-      '*EVERYTHING ZANZIBAR — RENTAL RESERVATION*',
+      '*EVERYTHING ZANZIBAR — SELF-DRIVE BOOKING*',
       '━━━━━━━━━━━━━━━',
-      '*Vehicle:* '+v.name,
-      '*Daily rate:* $'+v.rate+' / day',
+      '*Vehicle:* '+rideSel.name,
+      '*Guest:* '+nm,
+      '*Phone:* '+ph,
+      '*Pickup date:* '+dt,
+      '*Duration:* '+days+' day'+(days>1?'s':''),
+      '*Total due:* $'+total+'   ($'+rideSel.rate+' / day)',
       '━━━━━━━━━━━━━━━',
-      'Please confirm availability, my pickup date and number of days to lock in this self-drive cruiser.'
+      'Please confirm availability and share payment details to lock in my ride.'
     ].join('\n'));
-  };
+  });
 
   /* ---------- view switching ---------- */
   function scrollTopNow(){ window.scrollTo({ top:0, behavior: reduce ? 'auto' : 'smooth' }); }
