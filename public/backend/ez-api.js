@@ -56,6 +56,38 @@
       }
     },
 
+    /* ---------------- TEAM (admin-only staff management) ----------------
+       Lets an admin add/manage staff from the backend instead of the Supabase
+       dashboard. Account creation uses a throwaway client so the admin's own
+       session is never disturbed. Requires "Confirm email" to be OFF in
+       Supabase → Authentication (staff use username-style addresses). */
+    team: {
+      toEmail: function (user) {
+        var e = String(user || "").trim().toLowerCase();
+        return e.indexOf("@") === -1 ? e + "@" + LOGIN_DOMAIN : e;
+      },
+      async list() { return ok(await sb.from("profiles").select("id,email,role").order("email")); },
+      async create(user, password, role) {
+        var email = EZ.team.toEmail(user);
+        if (!password || String(password).length < 6) throw new Error("Password must be at least 6 characters.");
+        if (["admin", "manager", "media"].indexOf(role) === -1) throw new Error("Pick a role.");
+        // Separate client so signUp does not replace the admin's active session.
+        var tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+        var res = await tmp.auth.signUp({ email: email, password: password });
+        if (res.error) throw res.error;
+        var id = res.data && res.data.user && res.data.user.id;
+        if (!id) throw new Error("That username already exists.");
+        // The new-user trigger creates the profiles row as 'media'; set the chosen role (admin RLS).
+        ok(await sb.from("profiles").upsert({ id: id, email: email, role: role }, { onConflict: "id" }));
+        return { id: id, email: email, role: role };
+      },
+      async setRole(id, role) {
+        if (["admin", "manager", "media"].indexOf(role) === -1) throw new Error("Invalid role.");
+        return ok(await sb.from("profiles").update({ role: role }).eq("id", id));
+      },
+      async remove(id) { return ok(await sb.from("profiles").delete().eq("id", id)); }
+    },
+
     /* ---------------- ACTIVITIES ---------------- */
     activities: {
       async list() { return ok(await sb.from("activities").select("*").eq("is_active", true)); },

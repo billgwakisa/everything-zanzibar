@@ -559,16 +559,58 @@
 
   /* ---------- USERS & SETTINGS (admin) ---------- */
   function pUsers(){
-    var users=[{u:'admin',role:'admin'},{u:'manager',role:'manager'},{u:'media',role:'media'}];
-    $('#panels').innerHTML=head('Users &amp; Settings','Manage staff roles and global site settings — admin only.','')+
-      '<div class="glass rounded-2xl overflow-hidden mb-5"><table class="w-full text-sm"><thead><tr class="text-azure text-[.66rem] uppercase tracking-wider"><th class="text-left p-3">User</th><th class="text-left p-3">Role</th><th class="text-left p-3">Permissions</th></tr></thead><tbody>'+
-      users.map(function(u){ var perms=u.role==='admin'?'Full access':u.role==='manager'?'Catalogue, hotels, transit, events':'Media + journal only'; return '<tr class="border-t border-white/8"><td class="p-3">'+u.u+'</td><td class="p-3"><span class="px-2 py-0.5 rounded-full bg-azure/15 text-azure text-xs">'+u.role+'</span></td><td class="p-3 text-white/65">'+perms+'</td></tr>'; }).join('')+
-      '</tbody></table></div>'+
+    var roleOpts=function(sel){ return ['admin','manager','media'].map(function(r){ return '<option value="'+r+'"'+(r===sel?' selected':'')+'>'+r+'</option>'; }).join(''); };
+    function access(role){ return role==='admin'?'Full access':role==='manager'?'Catalogue, hotels, transit, events':role==='media'?'Media + journal only':'No access'; }
+    var settingsBlock=
       '<div class="glass rounded-2xl p-5 max-w-md"><h3 class="font-serif text-lg mb-3">Site settings</h3>'+
       '<label class="lab">WhatsApp concierge number</label><input id="setWa" class="fld mb-3" value="'+esc(get('ez_settings',{wa:'255764317595'}).wa)+'">'+
       '<label class="lab">Instagram handle</label><input id="setIg" class="fld mb-3" value="'+esc(get('ez_settings',{ig:'everythingzanzibar'}).ig||'everythingzanzibar')+'">'+
       '<button id="setSave" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium">Save settings</button></div>';
-    $('#setSave').onclick=function(){ var _s={wa:$('#setWa').value.trim(),ig:$('#setIg').value.trim()}; set('ez_settings',_s); if(BACKEND) EZ.settings.save(_s).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); toast('Settings saved.'); };
+    function wireSettings(){ $('#setSave').onclick=function(){ var _s={wa:$('#setWa').value.trim(),ig:$('#setIg').value.trim()}; set('ez_settings',_s); if(BACKEND) EZ.settings.save(_s).catch(function(e){console.error(e); toast('Backend write failed — '+(e.message||e));}); toast('Settings saved.'); }; }
+
+    if(!BACKEND){
+      var demo=[{u:'admin',role:'admin'},{u:'manager',role:'manager'},{u:'media',role:'media'}];
+      $('#panels').innerHTML=head('Users &amp; Settings','Manage staff roles and global site settings — admin only.','')+
+        '<div class="glass rounded-2xl overflow-hidden mb-5"><table class="w-full text-sm"><thead><tr class="text-azure text-[.66rem] uppercase tracking-wider"><th class="text-left p-3">User</th><th class="text-left p-3">Role</th><th class="text-left p-3">Permissions</th></tr></thead><tbody>'+
+        demo.map(function(u){ return '<tr class="border-t border-white/8"><td class="p-3">'+u.u+'</td><td class="p-3"><span class="px-2 py-0.5 rounded-full bg-azure/15 text-azure text-xs">'+u.role+'</span></td><td class="p-3 text-white/65">'+access(u.role)+'</td></tr>'; }).join('')+
+        '</tbody></table></div>'+settingsBlock;
+      wireSettings(); return;
+    }
+
+    $('#panels').innerHTML=head('Users &amp; Settings','Add staff and set their access. Each member signs in at /admin with their username and password.','')+
+      '<div class="glass rounded-2xl p-5 mb-5" style="max-width:44rem"><h3 class="font-serif text-lg mb-3">Add team member</h3>'+
+        '<div class="grid gap-2 items-end" style="grid-template-columns:1fr 1fr 9rem auto">'+
+          '<div><label class="lab">Username</label><input id="tm-user" class="fld" placeholder="e.g. sara"></div>'+
+          '<div><label class="lab">Temp password</label><input id="tm-pass" class="fld" placeholder="min 6 characters"></div>'+
+          '<div><label class="lab">Role</label><select id="tm-role" class="fld">'+roleOpts('media')+'</select></div>'+
+          '<button id="tm-add" class="px-4 py-2 rounded-full bg-azure text-ocean text-sm font-medium whitespace-nowrap">Add member</button>'+
+        '</div><p id="tm-msg" class="text-xs text-white/50 mt-2">They sign in with just the username (no email) and this password.</p></div>'+
+      '<div class="glass rounded-2xl overflow-hidden mb-5"><table class="w-full text-sm"><thead><tr class="text-azure text-[.66rem] uppercase tracking-wider"><th class="text-left p-3">Username</th><th class="text-left p-3">Role / access</th><th class="p-3"></th></tr></thead><tbody id="tm-rows"><tr><td class="p-3 text-white/50" colspan="3">Loading staff&hellip;</td></tr></tbody></table></div>'+
+      settingsBlock;
+    wireSettings();
+
+    function draw(list){
+      var tb=$('#tm-rows'); if(!tb) return;
+      if(!list.length){ tb.innerHTML='<tr><td class="p-3 text-white/50" colspan="3">No staff yet &mdash; add one above.</td></tr>'; return; }
+      tb.innerHTML=list.map(function(m){ var uname=(m.email||'').split('@')[0];
+        return '<tr class="border-t border-white/8"><td class="p-3">'+esc(uname)+'</td>'+
+          '<td class="p-3"><select data-role="'+m.id+'" class="fld" style="display:inline-block;width:11rem;padding-top:.3rem;padding-bottom:.3rem">'+roleOpts(m.role)+'</select> <span class="text-white/45 text-xs ml-1">'+access(m.role)+'</span></td>'+
+          '<td class="p-3 text-right"><button data-del="'+m.id+'" class="text-red-300/80 hover:text-red-200 text-xs">Remove</button></td></tr>';
+      }).join('');
+      $$('#tm-rows [data-role]').forEach(function(sel){ sel.onchange=function(){ EZ.team.setRole(sel.getAttribute('data-role'),sel.value).then(function(){ toast('Role updated.'); reload(); }).catch(function(e){ toast('Failed — '+(e.message||e)); }); }; });
+      $$('#tm-rows [data-del]').forEach(function(b){ b.onclick=function(){ if(!confirm('Remove this member\'s access?')) return; EZ.team.remove(b.getAttribute('data-del')).then(function(){ toast('Access removed.'); reload(); }).catch(function(e){ toast('Failed — '+(e.message||e)); }); }; });
+    }
+    function reload(){ EZ.team.list().then(draw).catch(function(e){ var tb=$('#tm-rows'); if(tb) tb.innerHTML='<tr><td class="p-3 text-red-300" colspan="3">Could not load staff &mdash; '+esc(e.message||String(e))+'</td></tr>'; }); }
+    reload();
+
+    $('#tm-add').onclick=function(){
+      var u=$('#tm-user').value.trim(), p=$('#tm-pass').value, r=$('#tm-role').value, msg=$('#tm-msg');
+      if(!u){ msg.textContent='Enter a username.'; return; }
+      msg.textContent='Creating…'; $('#tm-add').disabled=true;
+      EZ.team.create(u,p,r).then(function(){ $('#tm-user').value=''; $('#tm-pass').value=''; msg.textContent='Added — they can sign in now.'; reload(); })
+        .catch(function(e){ msg.textContent='Failed — '+(e.message||e); })
+        .then(function(){ $('#tm-add').disabled=false; });
+    };
   }
 
   /* ---------- boot ---------- */
