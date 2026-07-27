@@ -144,5 +144,36 @@
         "src": "/legacy/admin.s1.js"
       }
     ]
+  },
+  {
+    "file": "events.html",
+    "route": "/events",
+    "slug": "events",
+    "lang": "en",
+    "title": "Tanzania Event Marketplace | Everything Zanzibar",
+    "desc": "Discover and secure tickets to the best festivals, beach parties, cultural showcases and headline concerts across Zanzibar and mainland Tanzania.",
+    "bodyAttrs": "class=\"bg-sand text-ocean antialiased overflow-x-hidden\"",
+    "scripts": [
+      {
+        "type": "src",
+        "src": "https://cdn.tailwindcss.com"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/events.s0.js"
+      },
+      {
+        "type": "src",
+        "src": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+      },
+      {
+        "type": "src",
+        "src": "/backend/ez-api.js"
+      },
+      {
+        "type": "src",
+        "src": "/legacy/events.s1.js"
+      }
+    ]
   }
 ]

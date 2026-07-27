@@ -14,6 +14,11 @@
   var SUPABASE_URL = "https://cniqmwphzjhxrqyvcpjk.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaXFtd3BoempoeHJxeXZjcGprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNTc0MTEsImV4cCI6MjA5OTczMzQxMX0.VnBTbqaPBBQuEqyXmpe9zaT328xuIkGVRBxIdGgEaWQ";
 
+  // Staff sign in with a plain username (admin / manager / media). Supabase Auth is
+  // always email-based, so a bare username is mapped to <username>@LOGIN_DOMAIN.
+  // Create the matching auth users with these exact addresses.
+  var LOGIN_DOMAIN = "everything-zanzibar.com";
+
   // Only activate once real keys are pasted in (and supabase-js is loaded).
   var configured = SUPABASE_URL.indexOf("YOUR-PROJECT") === -1 && SUPABASE_ANON_KEY.indexOf("YOUR-") === -1;
   if (!configured || !window.supabase) { window.EZ_READY = false; return; }
@@ -28,7 +33,12 @@
 
     /* ---------------- AUTH + RBAC ---------------- */
     auth: {
-      async signIn(email, password) {
+      // Accepts a plain staff username (admin/manager/media) OR a full email.
+      // A bare username (no "@") is mapped to <username>@LOGIN_DOMAIN behind the
+      // scenes, since Supabase Auth always signs in with an email address.
+      async signIn(user, password) {
+        var email = String(user || "").trim();
+        if (email.indexOf("@") === -1) email = email.toLowerCase() + "@" + LOGIN_DOMAIN;
         ok(await sb.auth.signInWithPassword({ email: email, password: password }));
         return EZ.auth.role();
       },
@@ -260,4 +270,25 @@
   };
 
   window.EZ = EZ;
+
+  /* ---- self-running PAGE BANNER applier ------------------------------------
+     Any element with data-ez-banner="KEY" gets its --ez-banner CSS var set to
+     the uploaded banner (cache-busted). Declare targets in markup as:
+       style="background:<overlay>,var(--ez-banner, url('fallback')) center/cover;"
+     If no banner is uploaded, the fallback url() shows — nothing breaks. ------ */
+  EZ.banners = {
+    apply: function (map) {
+      map = map || {};
+      var els = document.querySelectorAll("[data-ez-banner]");
+      for (var i = 0; i < els.length; i++) {
+        var u = map[els[i].getAttribute("data-ez-banner")];
+        if (u) els[i].style.setProperty("--ez-banner", "url('" + (String(u).split("?")[0] + "?v=" + Date.now()) + "')");
+      }
+    },
+    load: function () { return EZ.settings.get().then(function (s) { EZ.banners.apply((s && s.banners) || {}); }).catch(function (e) { console.error(e); }); }
+  };
+  (function () {
+    function run() { if (document.querySelector("[data-ez-banner]")) EZ.banners.load(); }
+    if (document.readyState !== "loading") run(); else document.addEventListener("DOMContentLoaded", run);
+  })();
 })();

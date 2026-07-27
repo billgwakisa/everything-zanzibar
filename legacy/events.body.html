@@ -1,0 +1,94 @@
+<!-- NAV -->
+<nav class="sticky top-0 z-40 bg-ocean/95 backdrop-blur border-b border-white/10 text-white">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2">
+      <img src="/1.jpg" class="w-9 h-9 rounded-full bg-white p-0.5 object-contain" onerror="this.style.display='none'" alt="">
+      <span class="text-lg" style="font-family:'Open Sans',sans-serif">Everything Zanzibar</span>
+    </a>
+    <div class="hidden sm:flex items-center gap-6 text-sm">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="/activities" class="hover:text-gold transition">Experiences</a>
+      <a href="/booking" class="hover:text-gold transition">Plan a Trip</a>
+      <a href="/events" class="text-gold">Events</a>
+      <a href="https://wa.me/255764317595" target="_blank" rel="noopener" class="px-4 py-1.5 rounded-full border border-gold text-gold hover:bg-gold hover:text-ocean transition">Concierge</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="bg-ocean text-white">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-16 md:py-24 text-center">
+    <span class="text-gold text-xs tracking-[0.3em] uppercase font-medium">Tanzania Event Marketplace</span>
+    <h1 class="font-serif text-4xl md:text-6xl mt-4 leading-tight">Festivals, beach parties<br>&amp; premium nights out</h1>
+    <p class="text-white/70 mt-5 max-w-2xl mx-auto font-light">Discover and secure tickets to the best events across Zanzibar and mainland Tanzania &mdash; cultural showcases, beach festivals and headline concerts, all in one place.</p>
+  </div>
+</header>
+
+<!-- SPONSORED / FEATURED MARQUEE -->
+<section id="evtFeatured" class="hidden bg-ocean2 text-white py-6 border-y border-white/10">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 mb-3">
+    <span class="text-gold text-xs tracking-[0.3em] uppercase font-medium">&#9733; Featured &amp; Sponsored</span>
+  </div>
+  <div class="marquee"><div class="marquee-track" id="evtMarquee"></div></div>
+</section>
+
+<!-- MARKETPLACE -->
+<section class="bg-sand text-ocean py-14 md:py-20 min-h-[50vh]">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div id="evtTabs" class="flex items-center gap-2 mb-8 flex-wrap">
+      <button data-region="" class="tab on px-5 py-2 rounded-full text-sm font-medium border border-ocean/15">All events</button>
+      <button data-region="zanzibar" class="tab px-5 py-2 rounded-full text-sm font-medium border border-ocean/15">Zanzibar Events</button>
+      <button data-region="mainland" class="tab px-5 py-2 rounded-full text-sm font-medium border border-ocean/15">Mainland Tanzania</button>
+    </div>
+    <div id="evtGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <p id="evtEmpty" class="hidden text-center text-ocean/55 py-16">No events in this region yet &mdash; check back soon.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-ocean2 text-white/70">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-8 text-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+    <span>&copy; <span id="evtYear"></span> Everything Zanzibar</span>
+    <a href="https://wa.me/255764317595" target="_blank" rel="noopener" class="text-gold hover:underline">Concierge: +255 764 317 595</a>
+  </div>
+</footer>
+
+<!-- SECURE TICKETS MODAL -->
+<div id="mTix" class="fixed inset-0 z-[90] hidden items-center justify-center p-4" style="background:rgba(4,12,24,.72);backdrop-filter:blur(6px);" onclick="if(event.target===this)closeTix()">
+  <div class="bg-white text-ocean rounded-2xl w-full max-w-md p-6 shadow-2xl">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="text-[11px] uppercase tracking-wide text-teal font-medium">Secure tickets</div>
+        <h3 class="font-serif text-xl mt-0.5 leading-tight" id="tx-event"></h3>
+        <div class="text-xs text-ocean/60 mt-1" id="tx-when"></div>
+      </div>
+      <button onclick="closeTix()" class="text-ocean/40 hover:text-ocean text-2xl leading-none" aria-label="Close">&times;</button>
+    </div>
+    <div class="mt-5 space-y-4">
+      <div>
+        <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Full name</label>
+        <input id="tx-name" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" placeholder="Your name" />
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Contact number (country code)</label>
+        <input id="tx-phone" type="tel" inputmode="tel" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" placeholder="+255 7XX XXX XXX" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Ticket tier</label>
+          <select id="tx-tier" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" onchange="txTotal()"></select>
+        </div>
+        <div>
+          <label class="block text-xs uppercase tracking-wide text-teal font-medium mb-1.5">Tickets</label>
+          <input id="tx-qty" type="number" min="1" value="1" oninput="txTotal()" class="w-full px-4 py-2.5 rounded-xl border border-ocean/15 outline-none focus:border-teal transition" />
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-3 border-t border-ocean/10">
+        <span class="text-sm text-ocean/60">Total</span>
+        <span class="font-serif text-2xl text-ocean" id="tx-total">&mdash;</span>
+      </div>
+    </div>
+    <button type="button" id="tx-confirm" class="mt-5 w-full py-3 rounded-full bg-teal hover:bg-tealb text-white font-medium transition">Secure Tickets &rarr;</button>
+    <p class="text-center text-ocean/45 text-xs mt-2">Reserved in our system first, then confirmed with our concierge on WhatsApp for payment.</p>
+  </div>
+</div>

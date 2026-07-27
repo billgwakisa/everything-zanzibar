@@ -1,0 +1,15 @@
+  html{scroll-behavior:smooth;}
+  body{font-family:'Inter',system-ui,sans-serif;}
+  .font-serif{font-family:'Fraunces',Georgia,serif;}
+  ::selection{background:#2FA8E0;color:#0A2540;}
+
+  /* marketplace filter tabs */
+  .tab{background:#fff;color:#14304F;transition:all .2s;}
+  .tab.on{background:#1E70B0;color:#fff;border-color:#1E70B0;}
+
+  /* sponsored / featured marquee */
+  .marquee{overflow:hidden;}
+  .marquee-track{display:flex;gap:1rem;width:max-content;animation:ez-marq 48s linear infinite;}
+  .marquee:hover .marquee-track{animation-play-state:paused;}
+  @keyframes ez-marq{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @media (prefers-reduced-motion: reduce){ .marquee-track{animation:none;} }

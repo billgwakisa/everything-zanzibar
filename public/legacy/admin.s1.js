@@ -90,7 +90,7 @@
     var u=$('#lg-user').value.trim().toLowerCase(), p=$('#lg-pass').value; $('#lg-err').textContent='';
     if(BACKEND){
       EZ.auth.signIn(u,p).then(function(r){ if(r){ role=r; set('ez_role',role); $('#roleBadge').textContent=u+' · '+role; sessionStorage.setItem('ez_auth','1'); showApp(true); } else $('#lg-err').textContent='No staff role assigned to this account.'; })
-        .catch(function(){ $('#lg-err').textContent='Incorrect email or password.'; });
+        .catch(function(){ $('#lg-err').textContent='Incorrect username or password.'; });
       return;
     }
     var c=creds(), acc=c[u];
@@ -460,7 +460,8 @@
   var SLOTS=[{id:'logo-badge',name:'Logo — badge',file:'1.jpg'},{id:'logo-navy',name:'Logo — stacked navy',file:'2.jpg'},{id:'logo-light',name:'Logo — stacked light',file:'3.jpg'},{id:'festival',name:'Event Horizon — festival',file:'festival.jpg.jpg'},{id:'yacht',name:'Event Horizon — yacht',file:'yacht.jpg.jpg'},{id:'founder',name:'Founder portrait',file:'founder-1.jpg'}];
   function pMedia(){
     var media=get('ez_media',{});
-    $('#panels').innerHTML=head('Media &amp; Logo Assets','Drag-and-drop or browse to replace logos and hero graphics.','')+
+    $('#panels').innerHTML=head('Media &amp; Logo Assets','Page banners, brand logos and the media library &mdash; every upload routes to everything-zanzibar-media.','')+
+      '<div class="glass rounded-2xl p-5 mb-6"><div class="mb-3"><h3 class="font-serif text-lg">Page Banners &amp; Headers</h3><div class="text-white/50 text-xs">Upload the hero/background for each page &mdash; saved to <b>banners/</b> and applied to the live site instantly (cache-busted).</div></div><div id="bnGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div></div>'+
       '<div class="glass rounded-2xl p-5 mb-6">'+
         '<div class="flex items-center justify-between flex-wrap gap-3 mb-3"><div><h3 class="font-serif text-lg">Media Library</h3><div class="text-white/50 text-xs max-w-md">Upload pictures &amp; videos, or link large files via Google Drive. Copy a URL to drop into any Journal post, event flyer or listing.</div></div><button id="mlUp" class="px-3 py-1.5 rounded-full bg-azure text-ocean text-sm font-medium whitespace-nowrap">+ Upload picture / video</button></div>'+
         '<div class="flex gap-2 mb-4"><input id="mlUrl" class="fld flex-1" placeholder="Paste an image / video URL or Google Drive share link"><button id="mlAddUrl" class="px-4 rounded-lg bg-azure/15 text-azure text-sm whitespace-nowrap">Link asset</button></div>'+
@@ -468,6 +469,41 @@
       '</div>'+
       '<div class="glass rounded-2xl p-4 text-sm text-white/70 mb-4">Fixed brand slots — uploads preview instantly. To publish locally, <b>Download</b> and drop into the site folder under the listed filename; with Supabase connected they upload to storage.</div>'+
       '<div id="mdGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>';
+
+    /* ---- Page Banners: upload -> everything-zanzibar-media/banners/ -> site settings ---- */
+    var BANNERS=[
+      {key:'home-hero',        name:'Homepage Hero'},
+      {key:'activities-header',name:'Activities & Excursions Header'},
+      {key:'booking-banner',   name:'Booking Hub Banner'},
+      {key:'logistics-banner', name:'Logistics / Self-Driven Banner'},
+      {key:'founder-banner',   name:'Founder / About Banner'},
+      {key:'journal-header',   name:'Journal & Events Header'}
+    ];
+    function bnCfg(){ return get('ez_bannerCfg',{}); }
+    function renderBanners(){
+      var cfg=bnCfg(), g=$('#bnGrid'); if(!g) return;
+      g.innerHTML=BANNERS.map(function(b){ var cur=cfg[b.key]||'';
+        return '<div class="glass rounded-2xl p-3"><div class="font-medium text-sm">'+b.name+'</div><div class="text-white/40 text-[.66rem] mb-2">banners/'+b.key+'</div><div data-bn="'+b.key+'" class="border border-dashed border-white/20 rounded-xl aspect-[16/9] bg-black/20 bg-cover bg-center cursor-pointer" style="background-image:url(\''+esc(cur)+'\')"></div><div class="flex gap-2 mt-2"><button data-bnup="'+b.key+'" class="px-3 py-1 rounded-full bg-azure/15 text-azure text-xs">Upload</button>'+(cur?'<button data-bnclr="'+b.key+'" class="px-3 py-1 rounded-full border border-white/15 text-xs">Clear</button>':'')+'</div></div>';
+      }).join('');
+      $$('[data-bnup]').forEach(function(x){ x.onclick=function(){ bnPick(x.getAttribute('data-bnup')); }; });
+      $$('[data-bnclr]').forEach(function(x){ x.onclick=function(){ bnSave(x.getAttribute('data-bnclr'),''); }; });
+      $$('[data-bn]').forEach(function(d){ d.onclick=function(){ bnPick(d.getAttribute('data-bn')); };
+        ['dragover','dragenter'].forEach(function(ev){ d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('border-azure');}); });
+        ['dragleave','drop'].forEach(function(ev){ d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('border-azure');}); });
+        d.addEventListener('drop',function(e){ var f=e.dataTransfer.files[0]; if(f&&f.type.indexOf('image')===0) bnPut(d.getAttribute('data-bn'),f); });
+      });
+    }
+    function bnPick(key){ var i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.onchange=function(){ if(i.files[0]) bnPut(key,i.files[0]); }; i.click(); }
+    function bnPut(key,f){
+      if(BACKEND){ toast('Optimising & uploading…'); EZ.media.put(f,'banners',key).then(function(r){ bnSave(key,r.url); toast('Banner updated ✓ — live on the site.'); }).catch(function(e){ console.error(e); toast('Upload failed — '+(e.message||e)); }); }
+      else fileURL(f,function(u){ bnSave(key,u); toast('Banner set (demo mode).'); });
+    }
+    function bnSave(key,url){
+      var cfg=bnCfg(); if(url) cfg[key]=url; else delete cfg[key]; set('ez_bannerCfg',cfg); renderBanners();
+      if(BACKEND){ EZ.settings.get().then(function(s){ s=s||{}; s.banners=cfg; return EZ.settings.save(s); }).catch(function(e){ console.error(e); toast('Could not save setting — '+(e.message||e)); }); }
+    }
+    if(BACKEND){ EZ.settings.get().then(function(s){ if(s&&s.banners){ set('ez_bannerCfg',s.banners); renderBanners(); } }).catch(function(e){console.error(e);}); }
+    renderBanners();
     function render(){ media=get('ez_media',{}); $('#mdGrid').innerHTML=SLOTS.map(function(s){ var cur=media[s.id]||s.file; return '<div class="glass rounded-2xl p-3"><div class="font-medium text-sm">'+s.name+'</div><div class="text-white/40 text-xs mb-2">'+s.file+'</div><div class="drop border border-dashed border-white/20 rounded-xl aspect-[16/10] overflow-hidden bg-black/20 cursor-pointer" data-slot="'+s.id+'"><img src="'+esc(cur)+'" onerror="this.style.display=\'none\'" class="w-full h-full object-cover"></div><div class="flex gap-2 mt-2"><button data-browse="'+s.id+'" class="px-3 py-1 rounded-full border border-white/15 text-xs">Browse</button>'+(media[s.id]?'<button data-dl="'+s.id+'" data-f="'+s.file+'" class="px-3 py-1 rounded-full bg-gold text-ocean text-xs">Download</button>':'')+'</div></div>'; }).join('');
       SLOTS.forEach(function(s){ var d=$('[data-slot="'+s.id+'"]'); if(!d)return; function take(f){ if(f&&f.type.indexOf('image')===0) putSlot(s.id,f); } d.onclick=function(){ pick(s.id); }; ['dragover','dragenter'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.add('border-azure');});}); ['dragleave','drop'].forEach(function(ev){d.addEventListener(ev,function(e){e.preventDefault();d.classList.remove('border-azure');});}); d.addEventListener('drop',function(e){take(e.dataTransfer.files[0]);}); });
       $$('[data-browse]').forEach(function(b){ b.onclick=function(){ pick(b.getAttribute('data-browse')); }; });
