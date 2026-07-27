@@ -17,6 +17,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,400&family=Inter:wght@300;400;500;600&family=Open+Sans:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
+        {/* Brand navy as the base canvas so pages that theme via the Tailwind
+            CDN (JS) never flash a white background before that script loads. */}
+        <style>{`html{background:#0A2540}`}</style>
       </head>
       <body>{children}</body>
     </html>
