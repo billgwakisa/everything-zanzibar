@@ -50,8 +50,11 @@ export default function LegacyPage({ html, cssHref, scripts, bodyClass }: Legacy
 
   return (
     <>
-      {/* Next hoists stylesheet links into <head> and dedupes them */}
-      <link rel="stylesheet" href={cssHref} />
+      {/* React 19 only hoists a stylesheet into <head> (render-blocking, deduped)
+          when it declares a precedence — without this the link stays in <body>
+          and the page paints unstyled first (logo/text flash) before the CSS
+          applies. `precedence` makes it block first paint, killing the flash. */}
+      <link rel="stylesheet" href={cssHref} precedence="high" />
       <div dangerouslySetInnerHTML={{ __html: html }} />
     </>
   );
