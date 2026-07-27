@@ -205,6 +205,14 @@
       async save(v) { return ok(await sb.from("settings").upsert({ key: "site", value: v })); }
     },
 
+    /* ---------------- VISITOR ANALYTICS (admin dashboard) ----------------
+       Aggregated by an admin-only SECURITY DEFINER RPC (analytics_overview).
+       Returns { totalViews, uniqueVisitors, countries, byCountry[], byCity[],
+       byDay[], byPath[], recent[] } for the last `days` days. */
+    analytics: {
+      async overview(days) { return ok(await sb.rpc("analytics_overview", { days: days || 30 })); }
+    },
+
     /* ================= MEDIA STORAGE & DELIVERY PIPELINE =====================
        pick file -> convert to .webp in the browser -> upload into a mapped
        folder of the 'everything-zanzibar-media' bucket -> write the public URL

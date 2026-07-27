@@ -69,6 +69,7 @@
   var pendingUser=null;
   var SECTIONS = [
     {id:'overview',  label:'Overview',                  roles:['admin']},
+    {id:'analytics', label:'Visitor Analytics',         roles:['admin']},
     {id:'bookings',  label:'Booking & Payments Vault',  roles:['admin']},
     {id:'events',    label:'Event Registry',            roles:['admin','manager']},
     {id:'activities',label:'Activities & Tours',        roles:['admin','manager']},
@@ -179,7 +180,7 @@
     var p=$('#panels'), d=$('#denied');
     if(!section || !can(section)){ d.classList.remove('hidden'); p.innerHTML=''; return; }
     d.classList.add('hidden');
-    ({overview:pOverview,bookings:pBookings,events:pEvents,activities:pActs,hotels:pHotels,yachts:pYachts,vehicles:pVehicles,transit:pTransit,media:pMedia,journal:pJournal,users:pUsers}[section]||function(){})();
+    ({overview:pOverview,analytics:pAnalytics,bookings:pBookings,events:pEvents,activities:pActs,hotels:pHotels,yachts:pYachts,vehicles:pVehicles,transit:pTransit,media:pMedia,journal:pJournal,users:pUsers}[section]||function(){})();
   }
   function head(title,sub,actions){ return '<div class="flex items-end justify-between flex-wrap gap-3 mb-5"><div><h2 class="font-serif text-2xl">'+title+'</h2><p class="text-white/55 text-sm mt-0.5 font-light">'+sub+'</p></div><div class="flex gap-2 flex-wrap">'+(actions||'')+'</div></div>'; }
 
@@ -197,6 +198,60 @@
       card('Pending escrow',pend,'text-sunset')+
       card('Events tracked',ev,'text-gold')+'</div>'+
       '<div class="glass rounded-2xl p-5 mt-4 text-sm text-white/70 leading-relaxed">Revenue counts only bookings marked <b class="text-emerald">Paid &amp; Locked</b> in the Vault. Manager and Media roles never see this panel.</div>';
+  }
+
+  function pAnalytics(){
+    var days=get('ez_an_days',30);
+    var actions=[7,30,90].map(function(d){ return '<button data-an-days="'+d+'" class="px-3 py-1.5 rounded-full text-sm font-medium '+(d===days?'bg-azure text-ocean':'bg-white/10 text-white/70 hover:bg-white/15')+'">'+d+' days</button>'; }).join('');
+    $('#panels').innerHTML=head('Visitor Analytics','Where your website visitors are coming from — country, city and pages. First-party data, no third-party trackers.',actions)+
+      '<div id="anBody" class="text-white/70 text-sm">Loading visitor data&hellip;</div>';
+    $$('#panels [data-an-days]').forEach(function(b){ b.onclick=function(){ set('ez_an_days',parseInt(b.getAttribute('data-an-days'),10)); pAnalytics(); }; });
+
+    if(!BACKEND){ $('#anBody').innerHTML='<div class="glass rounded-2xl p-5">Connect the backend to see live visitor analytics.</div>'; return; }
+
+    var regionNames; try{ regionNames=new Intl.DisplayNames(['en'],{type:'region'}); }catch(e){ regionNames=null; }
+    function cname(code){ if(!code||code==='??') return 'Unknown'; try{ return (regionNames&&regionNames.of(code))||code; }catch(e){ return code; } }
+    function e2(s){ return esc(String(s==null?'':s)); }
+    function bar(v,max){ var pct=max>0?Math.round(v/max*100):0; return '<div class="h-1.5 rounded-full bg-azure/70 mt-1" style="width:'+pct+'%"></div>'; }
+    function card(l,v,c){ return '<div class="glass rounded-2xl p-5"><div class="text-white/50 text-xs uppercase tracking-wider">'+l+'</div><div class="font-serif text-3xl mt-1 '+(c||'')+'">'+v+'</div></div>'; }
+
+    EZ.analytics.overview(days).then(function(d){
+      d=d||{};
+      var byCountry=d.byCountry||[],byCity=d.byCity||[],byDay=d.byDay||[],byPath=d.byPath||[],recent=d.recent||[];
+      var maxC=byCountry.reduce(function(m,x){return Math.max(m,x.views);},0);
+      var maxCity=byCity.reduce(function(m,x){return Math.max(m,x.views);},0);
+      var maxDay=byDay.reduce(function(m,x){return Math.max(m,x.views);},0);
+
+      var html='<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">'+
+        card('Page views',(d.totalViews||0).toLocaleString(),'text-azure')+
+        card('Unique visitors',(d.uniqueVisitors||0).toLocaleString(),'text-emerald')+
+        card('Countries reached',(d.countries||0).toLocaleString(),'text-gold')+'</div>';
+
+      if(byDay.length){
+        html+='<div class="glass rounded-2xl p-5 mb-4"><div class="text-white/50 text-xs uppercase tracking-wider mb-3">Daily page views</div>'+
+          '<div class="flex items-end gap-1 h-28">'+byDay.map(function(x){ var h=maxDay>0?Math.round(x.views/maxDay*100):0; return '<div class="flex-1 bg-azure/60 rounded-t" style="height:'+Math.max(h,2)+'%" title="'+e2(x.day)+': '+x.views+' views"></div>'; }).join('')+'</div>'+
+          '<div class="flex justify-between text-white/40 text-[.65rem] mt-2"><span>'+e2((byDay[0]||{}).day||'')+'</span><span>'+e2((byDay[byDay.length-1]||{}).day||'')+'</span></div></div>';
+      }
+
+      html+='<div class="grid lg:grid-cols-2 gap-4">';
+      html+='<div class="glass rounded-2xl p-5"><div class="text-white/50 text-xs uppercase tracking-wider mb-3">Top countries</div>'+
+        (byCountry.length?byCountry.map(function(x){ return '<div class="mb-2.5"><div class="flex justify-between text-sm"><span>'+e2(cname(x.country))+'</span><span class="text-white/55">'+x.views+' <span class="text-white/35">/ '+x.visitors+' unique</span></span></div>'+bar(x.views,maxC)+'</div>'; }).join(''):'<div class="text-white/45">No data yet.</div>')+'</div>';
+      html+='<div class="glass rounded-2xl p-5"><div class="text-white/50 text-xs uppercase tracking-wider mb-3">Top cities</div>'+
+        (byCity.length?byCity.map(function(x){ return '<div class="mb-2.5"><div class="flex justify-between text-sm"><span>'+e2(x.city)+' <span class="text-white/40 text-xs">'+e2(cname(x.country))+'</span></span><span class="text-white/55">'+x.views+'</span></div>'+bar(x.views,maxCity)+'</div>'; }).join(''):'<div class="text-white/45">No data yet.</div>')+'</div>';
+      html+='</div>';
+
+      html+='<div class="grid lg:grid-cols-2 gap-4 mt-4">';
+      html+='<div class="glass rounded-2xl p-5"><div class="text-white/50 text-xs uppercase tracking-wider mb-3">Top pages</div>'+
+        (byPath.length?'<table class="w-full text-sm">'+byPath.map(function(x){ return '<tr class="border-t border-white/8"><td class="py-2">'+e2(x.path)+'</td><td class="py-2 text-right text-white/55">'+x.views+'</td></tr>'; }).join('')+'</table>':'<div class="text-white/45">No data yet.</div>')+'</div>';
+      html+='<div class="glass rounded-2xl p-5"><div class="text-white/50 text-xs uppercase tracking-wider mb-3">Recent visits</div>'+
+        (recent.length?'<div class="space-y-1.5 text-sm">'+recent.map(function(x){ var loc=[x.city,cname(x.country)].filter(Boolean).join(', '); return '<div class="flex justify-between gap-3"><span class="text-white/80 truncate">'+e2(loc||'Unknown')+'</span><span class="text-white/40 whitespace-nowrap">'+e2(x.path)+'</span><span class="text-white/35 whitespace-nowrap">'+e2(x.at)+'</span></div>'; }).join('')+'</div>':'<div class="text-white/45">No visits recorded yet.</div>')+'</div>';
+      html+='</div>';
+
+      html+='<div class="text-white/40 text-xs mt-4 leading-relaxed">Location is derived from the visitor\'s network at the edge (country / city level) — no IP addresses or personal data are stored. Staff visits to /admin are not counted. Data collects from the moment tracking went live.</div>';
+      $('#anBody').innerHTML=html;
+    }).catch(function(e){
+      $('#anBody').innerHTML='<div class="glass rounded-2xl p-5 text-sunset">Could not load analytics — '+esc(e.message||String(e))+'.<div class="text-white/50 text-xs mt-2">If it mentions a missing function, run <b>supabase-6-analytics.sql</b> in Supabase first.</div></div>';
+    });
   }
 
   /* ---------- BOOKING & PAYMENTS VAULT ---------- */

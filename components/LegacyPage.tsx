@@ -37,6 +37,30 @@ export default function LegacyPage({ html, cssHref, scripts, bodyClass }: Legacy
     // inject scripts sequentially so execution order matches the original page
     if (!ran.current) {
       ran.current = true;
+
+      // Fire-and-forget visitor analytics (coarse geo added server-side).
+      // Skip the staff admin area so internal use is not counted.
+      try {
+        if (!location.pathname.startsWith('/admin')) {
+          let vid = localStorage.getItem('ez_vid');
+          if (!vid) {
+            vid =
+              typeof crypto !== 'undefined' && crypto.randomUUID
+                ? crypto.randomUUID()
+                : Date.now().toString(36) + Math.random().toString(36).slice(2);
+            localStorage.setItem('ez_vid', vid);
+          }
+          fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            body: JSON.stringify({ path: location.pathname, v: vid, r: document.referrer || '' }),
+          }).catch(() => {});
+        }
+      } catch {
+        /* analytics must never break the page */
+      }
+
       let i = 0;
       const next = () => {
         if (i >= scripts.length) {
