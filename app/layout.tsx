@@ -42,6 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image', images: ['/1.jpg'] },
   formatDetection: { telephone: false },
+  verification: { google: 'm7n5u0IqzV6N1h-4MB6Pymc_JIVy8DO16ZyRclJFt5k' },
 };
 
 // Site-wide structured data. areaServed + contactPoint declare that the brand
