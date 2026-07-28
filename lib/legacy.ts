@@ -38,6 +38,18 @@ export type LegacyPageData = {
   scripts: string[];
 };
 
+/** The raw manifest entry for one slug (route, title, desc, lang…). */
+export function getEntry(slug: string): LegacyEntry {
+  const entry = manifest().find((p) => p.slug === slug);
+  if (!entry) throw new Error(`Unknown legacy page: ${slug}`);
+  return entry;
+}
+
+/** Every public (indexable) page — excludes the staff admin console. */
+export function publicEntries(): LegacyEntry[] {
+  return manifest().filter((p) => p.slug !== 'admin');
+}
+
 /** Everything a route needs to render one legacy page at parity. */
 export function getPage(slug: string): LegacyPageData {
   const entry = manifest().find((p) => p.slug === slug);

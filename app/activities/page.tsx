@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import LegacyPage from '@/components/LegacyPage';
 import { getPage } from '@/lib/legacy';
+import { pageMetadata } from '@/lib/seo';
 
 const SLUG = 'activities';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const p = getPage(SLUG);
-  return { title: p.title, description: p.desc };
+export function generateMetadata(): Metadata {
+  return pageMetadata(SLUG);
 }
 
 export default function Page() {
