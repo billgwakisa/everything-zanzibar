@@ -41,7 +41,9 @@ set search_path = public
 as $$
 declare result json;
 begin
-  if public.ez_role() <> 'admin' then
+  -- coalesce is REQUIRED: for a non-admin/anon caller ez_role() is NULL, and
+  -- NULL <> 'admin' is NULL (not true), which would skip the guard and leak data.
+  if coalesce(public.ez_role(), '') <> 'admin' then
     raise exception 'admin only';
   end if;
 
@@ -84,5 +86,7 @@ begin
 end;
 $$;
 
-revoke all on function public.analytics_overview(int) from public;
+-- Supabase grants execute to anon by default privileges, so revoke it
+-- explicitly (belt-and-braces alongside the in-function admin guard above).
+revoke all on function public.analytics_overview(int) from public, anon;
 grant execute on function public.analytics_overview(int) to authenticated;
